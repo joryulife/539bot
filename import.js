@@ -1,0 +1,1 @@
+import channelSecret from "./config"
