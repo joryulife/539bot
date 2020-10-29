@@ -11,7 +11,7 @@ app.post('/callback', (reqFromLINE, resToLINE) => {
   console.log("===resFromLINE===");console.log(reqFromLINE);
 
   // check X-Line-Signature
-  if(line.config.validate_signature(req.headers['X-Line-Signature'],req.body)){
+  if(line.config.validate_signature(reqFromLINE.headers['X-Line-Signature'],reqFromLINE.body)){
      console.log('X-Line-Signature validation error');
      return;
   }
