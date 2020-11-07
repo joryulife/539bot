@@ -11,7 +11,9 @@ console.log('Server start!');
 
 //createserverの処理
 function getFromClient(request,response) {
-    var content = ejs.render(index_page);
+    var content = ejs.render(index_page,{
+        title:"Indexページ",content:"これはテンプレートを使ったサンプルページです。"
+    });
     response.writeHead(200,{'Content-Type':'text/html'});
     response.write(content);
     response.end();
