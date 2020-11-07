@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const ejs = require('ejs');
 
-const index_page = fs.readFileSync('./index2-7.ejs','utf8');
+const index_page = fs.readFileSync('./index2-12.ejs','utf8');
 
 var server = http.createServer(getFromClient);
 
