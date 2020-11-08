@@ -3,8 +3,9 @@ const fs = require('fs');
 const ejs = require('ejs');
 const url = require('url');
 
-const index_page = fs.readFileSync('./index2-12.ejs','utf8');
-const style_css = fs.readFileSync('./style2-11.css','utf8');
+const index_page = fs.readFileSync('./index2-15.ejs','utf8');
+const other_page = fs.readFileSync('./other.ejs','utf8')
+const style_css = fs.readFileSync('./style2-11.css');
 
 var server = http.createServer(getFromClient);
 
@@ -24,6 +25,16 @@ function getFromClient(request,response){
             response.end();
             break;
 
+        case '/other':
+            var content = ejs.render(other_page,{
+                title:"Other",
+                content:"これは新しく用意したページです。",
+            });
+            response.writeHead(200,{'Content-Type':'text/html'});
+            response.write(content);
+            response.end();
+            break;
+
         case '/style2-11.css':
             response.writeHead(200,{'Content-Type':'text/css'});
             response.write(style_css);
@@ -36,3 +47,6 @@ function getFromClient(request,response){
             break;
     }
 }
+
+
+
