@@ -19,7 +19,7 @@ function getFromClient(request,response){
             var content = "これはIndexページです。";
             var query = url_parts.query;
             if(query.msg != undefined){
-                content += 'あなたは、「' + query.msg + '」と送りました。';
+                content += 'あなたは、「' + query.msg + '」と送りました。' + query.a;
             }
 
             var content = ejs.render(index_page,{
