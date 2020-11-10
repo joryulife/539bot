@@ -22,7 +22,6 @@ function getFromClient(request,response){
             break;
         case '/other':
             console.log('case other page');
-            console.log(request);
             response_other(request,response);
             break;
         case '/style.css':
@@ -54,16 +53,17 @@ function response_other(request,response){
 
     //POSTアクセス時の処理
     //console.log(request);
-    console.log(request.methot);
-    if(request.methot == 'POST'){
+    console.log(request.method);
+    if(request.method == 'POST'){
         var body = '';
         //データ受信の処理
         request.on('data',(data)=>{
-            body += 'data';
+            body += data;
         });
         //データ受信終了の処理
         request.on('end',()=>{
             var post_data = qs.parse(body);
+            console.log(post_data);
             msg += 'あなたは、「' + post_data.msg + '」と書きました';
             var content = ejs.render(other_page,{
                 title:'Other',
