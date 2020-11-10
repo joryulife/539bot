@@ -4,9 +4,16 @@ const ejs = require('ejs');
 const url = require('url');
 const qs = require('querystring');
 
-const index_page = fs.readFileSync('./index3-2.ejs','utf8');
+const index_page = fs.readFileSync('./index3-5.ejs','utf8');
 const other_page = fs.readFileSync('./other.ejs','utf8');
 const style_css = fs.readFileSync('./style2-11.css','utf8');
+
+var data = {
+    'Taro':'09-999-999',
+    'Hanako':'080-888-888',
+    'Sachiko':'070-777-777',
+    'Ichiro':'060-666-666',
+};
 
 var server = http.createServer(getFromClient);
 
@@ -37,11 +44,11 @@ function getFromClient(request,response){
 }
 
 function response_index(request,response){
-    console.log('index function in');
-    var msg = "これはIndexページです";
+    var msg = "これはINdexページです。";
     var content = ejs.render(index_page,{
-        title:'Index',
+        title:"Index",
         content:msg,
+        data:data,
     });
     response.writeHead(200,{'Content-Type':'text/html'});
     response.write(content);
