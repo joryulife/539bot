@@ -5,7 +5,7 @@ const cheerio = require('cheerio');
 const keyword='更新リスト';
 const reqToMember=
     {
-        url:'https://Scraping-joryulife.codeanyapp.com',
+        url:'https://moodle.media.ryukoku.ac.jp/mod/choice/view.php?id=72175',
         method: 'GET'
     };
   request(reqToMember, (error, response, body) => {
