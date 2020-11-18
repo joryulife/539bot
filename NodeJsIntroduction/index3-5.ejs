@@ -14,19 +14,15 @@
             <h1 class="display-4"><%=title %> </h1>
         </header>
         <div role="main">
-            <p><%=content %></p>
-
-            <form action="/other"  method="POST">
-                <input type="text" name="msg" class="from-control">
-                <input type="submit" value="Click" class="btn btn-primary">
-            </form>
-
-            <!--
-            <form method="POST" action="/other">
-                コメント:<input type="text" name="msg"><br>
-                <input type="submit">
-            </form>
-            -->
+            <p><%=content %> </p>
+            <table class = "table">
+                <% for(var key in data) { %>
+                <tr>
+                    <th><%= key %></th>
+                    <td><%= data[key] %></td>
+                </tr>
+                <% } %>
+            </table>
         </div>
     </body>
 </html>

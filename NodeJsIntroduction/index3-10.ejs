@@ -11,22 +11,14 @@
     </head>
     <body class = "container">
         <header>
-            <h1 class="display-4"><%=title %> </h1>
+            <h1 class="display-4"><%=title %></h1>
         </header>
         <div role="main">
             <p><%=content %></p>
-
-            <form action="/other"  method="POST">
-                <input type="text" name="msg" class="from-control">
-                <input type="submit" value="Click" class="btn btn-primary">
-            </form>
-
-            <!--
-            <form method="POST" action="/other">
-                コメント:<input type="text" name="msg"><br>
-                <input type="submit">
-            </form>
-            -->
+            <% var id = 0; %>
+            <% for(var key in data) { %>
+            <%- include('data_item3-9',{id:++id, key:key, val:[data[key]]}) %>
+            <% } %>
         </div>
     </body>
 </html>

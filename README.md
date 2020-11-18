@@ -1,1 +1,6 @@
 # 539bot
+Node.js関連の練習の結果置き場です。
+LINEbot関連はdir 539botへ
+Node.jsを使った一般的なwebページなど向けのものはdir Introductionへ
+使用Moduleは大体dir moduleに入っていますが、一部私のlocal環境でしか動かないソースもあると思うので、エラーが出る場合は足りないmoduleはご自身でnpmお願いします。
+linebotやツイッターのbotのアクセストークンなど、ご自身の環境に合わせて適宜書き換えてください。
