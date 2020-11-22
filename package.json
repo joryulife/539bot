@@ -1,0 +1,28 @@
+{
+  "name": "539",
+  "version": "1.0.0",
+  "description": "Node.js関連の練習の結果置き場です。 LINEbot関連はdir 539botへ Node.jsを使った一般的なwebページなど向けのものはdir Introductionへ 使用Moduleは大体dir moduleに入っていますが、一部私のlocal環境でしか動かないソースもあると思うので、エラーが出る場合は足りないmoduleはご自身でnpmお願いします。 linebotやツイッターのbotのアクセストークンなど、ご自身の環境に合わせて適宜書き換えてください。",
+  "main": "index.js",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "cheerio": "^1.0.0-rc.3",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joryulife/539bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joryulife/539bot/issues"
+  },
+  "homepage": "https://github.com/joryulife/539bot#readme"
+}
