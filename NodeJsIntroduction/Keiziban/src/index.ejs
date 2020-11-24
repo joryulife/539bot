@@ -4,13 +4,14 @@
 <head>
     <meta http-equiv="content-type" content="text/html"; charset="UTF-8">
     <title>ミニメッセージボード</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <script>
         function init(){
             var id = localStorage.getItem('id');
             if(id == null){
                 location.href = './login';
             }
+            console.log(id);
             document.querySelector('#id').textContent = 'ID:' + id;
             document.querySelector('#id_input').value = id;
         }
@@ -24,7 +25,7 @@
     <div role="main">
         <p>※メッセージは最大10件まで保管されます。</p>
         <form method="POST" action="/">
-            <p id='id'></p>
+            <span id="id"></span>
             <input type="hidden" id = "id_input" name="id" value="">
             <div class="form-group">
                 <label for="msg">Message</label>
