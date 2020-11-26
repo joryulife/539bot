@@ -60,20 +60,14 @@ function knock (req, res) {
         var message_text = event_data.message.text;
 
         if (event_data.source.type != 'user') return;
-        
-        request.get(client.getProfile(user_id), function(error, response, body) {
-          console.log(response.statusCode);
-          if (!error && response.statusCode == 200) {
-            callback(req, response.displayName, message_id, message_type, message_text);
-          }else{
-            console.log("else");
-          }
-        });
+
+        const profile = client.getProfile(user_id);
+        callback(req,profile.displayName,message_id,message_type,message_text);
       },
     ],
-
     // 返事を生成する関数
     function(req, displayName, message_id, message_type, message_text) {
+      log("in70");
       var message = "";
       console.log("in2");
       message = "hello, " + displayName + "さん";
@@ -88,26 +82,11 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
 
-// LINE Userのプロフィールを取得する
-function getProfileOption(user_id) {
-  return {
-    url: 'https://api.line.me/v2/bot/profile/' + user_id,
-    proxy: process.env.FIXIE_URL,
-    json: true,
-    headers: {
-      'Authorization': 'Bearer' + lineifo.config.channelAccessToken
-    }
-  };
-}
-
-<<<<<<< HEAD
 /* 署名検証
 function validate_signature(signature, body) {
   return signature == crypto.createHmac('sha256', line.config.channelSecret).update(new Buffer(JSON.stringify(body), 'utf8')).digest('base64');
 }*/
 
-=======
->>>>>>> fb409b72a9b4496aa4266316664e85b7cb63c288
 app.listen(app.get('port'), ()=> {
   console.log('Node app is running');
 });
