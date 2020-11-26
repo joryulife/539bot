@@ -22,9 +22,9 @@ app.use(bodyParser.urlencoded({
 // JSONパーサー
 app.use(bodyParser.json());
 
+//ルーティング
 app.get('/', function(req, res) {
-  // herokuのルートディレクトリにアクセスした時に表示される
-  res.send('<h1>LINE BOT の開発セミナーへようこそ</h1>');
+  res.send('<h1>Sekibun!!</h1>');
 });
 
 app.get('/index', function(request, response) {
@@ -80,13 +80,13 @@ app.post('/callback', function(req, res) {
       // message = message_text; // おうむ返しする
       // message = message_text + "[" + message_text.length + "文字]";
       sendMessage.send(req, [messageTemplate.textMessage(message_text)]);
-      
+
       // var url = "https://i.imgur.com/I5AZqHV.png"
       // sendMessage.send(req, [
       //   messageTemplate.imageMessage(url)
       // ]);
 
-      // データベースを使う場合、下記のコードはコメントアウトしてください
+      // データベースを使う場合、下記のコードはコメントアウト
       //sendMessage.send(req, [messageTemplate.textMessage(message), messageTemplate.quickMessage("質問に答えてね！")]);
 
       // // flexメッセージを使う
@@ -98,23 +98,6 @@ app.post('/callback', function(req, res) {
 
       // データベースを使って返信する場合、こちらのコメントを解除してください
       //databaseSample(req, message_text);
-      
-      ////////////////////
-      // ぐるなびAPIパート //
-      ////////////////////
-      // 住所 改行 キーワード
-      // のフォーマットでメッセージを送ってください
-      // gnavi.api(req.body, message_text, function(result) {
-      //   var text = result['name']; // + "\n" + result['address'] + "\n" + result['opentime'];
-      //   sendMessage.send(req, [
-      //     messageTemplate.textMessage(text),
-      //     messageTemplate.textMessage(result['url'])
-      //     // messageTemplate.imageMessage(result['shop_image1']),
-      //     // messageTemplate.imageMessage(result['shop_image2'])
-      //   ]);
-      //   return;
-      // });
-
       return;
     }
   );
