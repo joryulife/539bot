@@ -1,0 +1,14 @@
+<!-- put this in views subdirectory -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+  <ul>
+  <% content.forEach( (value) => { %>
+  <li><%= value.userid %> says <%= value.message%> at <%= value.timestamp %></li>
+  <% }); %>
+  </ul>
+</body>
+</html>
