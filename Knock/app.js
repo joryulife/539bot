@@ -9,7 +9,7 @@ var path = require("path");
 var sendMessage = require('./lib/sendMessage.js');
 var messageTemplate = require('./lib/messageTemplate.js');
 var gnavi = require('./lib/gnaviapi.js');
-//var pgManager = require('./lib/postgresManager.js'); // データベースを使う時に必要
+var pgManager = require('./lib/postgresManager.js');
 
 // utilモジュールを使います。
 var util = require('util');
