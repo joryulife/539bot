@@ -91,10 +91,10 @@ function getProfileOption(user_id) {
   };
 }
 
-// 署名検証
+/* 署名検証
 function validate_signature(signature, body) {
   return signature == crypto.createHmac('sha256', line.config.channelSecret).update(new Buffer(JSON.stringify(body), 'utf8')).digest('base64');
-}
+}*/
 
 app.listen(app.get('port'), ()=> {
   console.log('Node app is running');
