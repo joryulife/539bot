@@ -100,6 +100,14 @@ function getProfileOption(user_id) {
   };
 }
 
+<<<<<<< HEAD
+/* 署名検証
+function validate_signature(signature, body) {
+  return signature == crypto.createHmac('sha256', line.config.channelSecret).update(new Buffer(JSON.stringify(body), 'utf8')).digest('base64');
+}*/
+
+=======
+>>>>>>> fb409b72a9b4496aa4266316664e85b7cb63c288
 app.listen(app.get('port'), ()=> {
   console.log('Node app is running');
 });
