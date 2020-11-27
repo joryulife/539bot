@@ -15,6 +15,7 @@ basicId:"@049kvxjn",
 //チャンネルアクセストークン
 channelAccessToken:"dvLM1fbPEISIwrO5AMIga2wktVeR1PHVG/BhETbrKYl6uNp3swME7x8oPnbHJGnQcsGNHev6mKF4SOI52Blj8spZjBkJUN9Q2qTVKiKXfnA67jWJb5LEwONSgHCZ/UQXzljh+CrkrMVyd7zMzjLJXgdB04t89/1O/w1cDnyilFU=",
   validate_signature: function(signature, body){
+    console.log(signature == crypto.createHmac('sha256', this.channelSecret).update(Buffer.from(JSON.stringify(body))).digest('base64'));
     return signature == crypto.createHmac('sha256', this.channelSecret).update(Buffer.from(JSON.stringify(body))).digest('base64');
   }
 };
