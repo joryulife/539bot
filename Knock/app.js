@@ -10,7 +10,7 @@ var util = require('util');
 var sendMessage = require('./lib/sendMessage');
 var messageTemplate = require('./lib/MessageTemplate');
 var gnavi = require('./lib/gnaviapi');
-//var pgManager = require('./lib/postgresManager');
+
 const lineinfo = require('./lib/lineinfo');
 const line = require('@line/bot-sdk');
 
@@ -37,12 +37,12 @@ app.post('/callback',knock);
 
 function knock (req, res) {
   console.log("in");
-  //console.log(event_data);
   // リクエストがLINE Platformから送られてきたか確認する
-  /*if (lineinfo.config.validate_signature(req.headers['x-line-signature'], req.body)) {
+  if (lineinfo.config.validate_signature(req.headers['x-line-signature'], req.body)) {
     console.log("if return1");
     return;
-  }*/
+  }
+
   //waterfallの[]内の無名関数の結果がcallbackされて第２引数の関数の結果が変える。
   async.waterfall([
       function(callback) {
@@ -55,23 +55,29 @@ function knock (req, res) {
         // ユーザIDを取得する
         var user_id = event_data.source.userId;
         var message_id = event_data.message.id;
-
         var message_type = event_data.message.type;
         var message_text = event_data.message.text;
 
         if (event_data.source.type != 'user') return;
-
-        const profile = client.getProfile(user_id);
-        callback(req,profile.displayName,message_id,message_type,message_text);
+        
+        client.getProfile(user_id)
+          .then((profile) => {
+            console.log(profile.displayName);
+            console.log(profile.userId);
+            console.log(profile.pictureUrl);
+            console.log(profile.statusMessage);
+            callback(req,profile.displayName,message_id,message_type,message_text);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       },
     ],
     // 返事を生成する関数
     function(req, displayName, message_id, message_type, message_text) {
-      log("in70");
       var message = "";
-      console.log("in2");
       message = "hello, " + displayName + "さん";
-      sendMessage.send(req, [messageTemplate.textMessage(message_text)]);
+      sendMessage.send(req, messageTemplate.textMessage(message));
       return;
     }
   );
@@ -81,11 +87,6 @@ function knock (req, res) {
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
-
-/* 署名検証
-function validate_signature(signature, body) {
-  return signature == crypto.createHmac('sha256', line.config.channelSecret).update(new Buffer(JSON.stringify(body), 'utf8')).digest('base64');
-}*/
 
 app.listen(app.get('port'), ()=> {
   console.log('Node app is running');
