@@ -28,7 +28,7 @@ if(min == 59){
   hour++;
 }
 //DB代わりの連想配列その他
-const testnum = 2;
+const testnum = 1;
 var usrlist = [{id:"000",flag:"plane",name:"テストユーザー001"}];
 var title = "問題001";
 var imageUrl = "https://noschool.asia/wp-content/uploads/2017/12/IMG_20171222_220633.jpg";
@@ -59,7 +59,7 @@ app.get('/home', function(request, response) {
 });*/
 
 //指定時刻実行
-cron.schedule(QS[testnum].timer,()=>{
+/*cron.schedule(QS[testnum].timer,()=>{
   async.waterfall([
     function(callback){
       let mes = QS[testnum].qs;
@@ -77,7 +77,7 @@ cron.schedule(QS[testnum].timer,()=>{
     client.multicast(QS[testnum].usrid,[mes]);
   })
   console.log("cron実行");
-});
+});*/
 
 
 app.post('/callback',knock);
@@ -130,7 +130,7 @@ function knock (req, res) {
       if(flag){
         usrlist.push({id:profile.userId,flag:"plane",name:profile.displayName});
         console.log(usrlist);
-        message = "useridを登録しました";
+        message = "こんにちは"+profile.displayName+"さん\nあなたのuseridを登録しました。\nuseridは"+profile.userId + "です。";
       }else if(message_text == "登録"){
         usrlist[index].flag = "登録";
         message = "問題番号を入力してくだい";
@@ -138,8 +138,10 @@ function knock (req, res) {
         usrlist[index].flag = "ランキング";
         message = "問題番号を入力してくだい";
       }else if(message_text == "確認"){
-        usrlist[index].flag = "確認";
-        message = "useridを入力してください";
+        message = "あなたのユーザーネームは" + profile.userId + "です。\n";
+        message+= "確認したい人のidを入力してください\n";
+        message+= "ユーザーid:問題番号";
+        usrlist[index].flag = "確認受付";
       }else if(message_text == "解説"){
         usrlist[index].flag == "解説";
         message = "問題番号を入力してくだい"
@@ -198,11 +200,25 @@ function knock (req, res) {
             }
           }
         }
-      }else if(usrlist[index].flag == "確認"){
-        message = "あなたのユーザーネームは" + profile.userId + "です。\n";
-        message+= "確認したい人のidを入力してください\n";
-        message+= "ユーザーid:問題番号";
-      }else{
+      }else if(usrlist[index].flag == "確認受付"){
+        if(message_text.match(/[0-9,a-z,A-Z]+:[0-9]+/)){
+          let point = message_text.indexOf(":");
+          let checkusrid = message_text.substring(0,point);
+          let checkqsid = message_text.substr(point+1);
+          for(let i = 0;i < usrlist.length;i++){
+            if(usrlist[i].id == checkusrid){
+              message = usrlist[i].name + "の" + checkqsid + "の達成状況は";
+              break;
+            }else{
+              message = checkusrid + "は存在しません";
+              usrlist[index].flag = "plane";
+            }
+          }
+        }else{
+          message = "有効な形式ではありません。";
+          usrlist[index].flag = "plane";
+        }
+      }else {
         usrlist[index].flag = "plane";
         message = "登録：問題登録\nランキング:ランキング確認\n確認：自他の状況確認\n解説：問題の解説";
       }
@@ -223,3 +239,16 @@ function getRandomInt(max) {
 app.listen(app.get('port'), ()=> {
   console.log('Node app is running');
 });
+
+/*
+[ { id: '000', flag: 'plane', name: 'テストユーザー001' },
+  { id: 'U3aa127f38f35ddee3962757fe0d50eba',
+    flag: '001',
+    name: '福應拓巳 🐗' },
+  { id: 'Uffabcf2ec5a3d50360ae705f95a1d909',
+    flag: 'plane',
+    name: 'Hiroshi Fukuo' },
+  { id: 'U2b948fca4c7ce8c760232c4d0218e713',
+    flag: 'plane',
+    name: '福應あゆみ' } ]
+*/
