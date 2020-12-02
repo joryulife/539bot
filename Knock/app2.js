@@ -103,8 +103,7 @@ function knock (req, res) {
         function(req, profile, message_id, message_type, message_text) {
             var message = "plane";
             let index,flag;
-            checkid(profile,flag).then(function(flag){
-                console.log("in 107"+flag);
+            checkid(profile,flag).then(function(flag){//初めてのユーザーか確認、結果をflagにしrootMessageに渡す
                 rootByMessage(profile,message_text,flag,message).then(function(message){
                     sendMessage.send(req, messageTemplate.textMessage(message));
                 })
@@ -246,13 +245,15 @@ function rootByMessage(profile,message_text,flag,message){
             connection.query('select count(*) as count from qslist where qs_id="'+message_text+'"',function (error, results, fields){
               if(error)throw error;
               if(results[0].count != 0){
-                connection.query('select * from qslist where qs_id="'+message_text+'"',function (error, results, fields){
+                connection.query('select qs_id,cast(lastday as date) as lastday from qslist where qs_id="'+message_text+'"',function (error, results, fields){
+                  console.log(results);
                   if(error)throw error;
                   message = message_text + "の最終実施日"+results[0].lastday+"のランキングは\n";
-                  connection.query('select * from rank_'+message_text+' order by time',function (error, results, fields){
+                  connection.query('select * from rank_'+message_text+' where time is not null order by time',function (error, results, fields){
                     if(error)throw error;
+                    console.log(results);
                     for(let i=0;i<results.length;i++){
-                      message+=i+"位"+results[i].usr_id+"\n";
+                      message+=(i+1)+"位"+results[i].usr_id+"\n";
                     }
                     connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
                     resolve(message);
