@@ -6,6 +6,7 @@ const async = require('async');
 const path = require("path");
 const util = require('util');
 const cron = require('node-cron');
+const fs = require('fs');
 
 var sendMessage = require('./lib/sendMessage');
 var messageTemplate = require('./lib/MessageTemplate');
@@ -58,6 +59,14 @@ app.get('/index', function(request, response) {
 app.get('/home', function(request, response) {
   response.sendFile(path.join(__dirname + '/views/home.html'));
 });*/
+app.get('/*.(png|bmp|jpg|jpeg)',(req,res)=>{
+  fs.readFile('./qsimage/000.jpg',(err,data)=>{
+    if(err) throw err;
+    console.log("sendimage");
+    res.type('jpg');
+    res.send(data);
+  })
+});
 
 //指定時刻実行
 cron.schedule(QS[testnum].timer,()=>{
