@@ -6,6 +6,7 @@ const async = require('async');
 const path = require("path");
 const util = require('util');
 const cron = require('node-cron');
+const fs = require('fs');
 
 var sendMessage = require('./lib/sendMessage');
 var messageTemplate = require('./lib/MessageTemplate');
@@ -31,7 +32,8 @@ if(min == 59){
 const testnum = 1;
 var usrlist = [{id:"000",flag:"plane",name:"テストユーザー001"}];
 var title = "問題001";
-var imageUrl = "https://noschool.asia/wp-content/uploads/2017/12/IMG_20171222_220633.jpg";
+//var imageUrl = "https://noschool.asia/wp-content/uploads/2017/12/IMG_20171222_220633.jpg";
+var imageUrl = "https://539bot-joryulife.codeanyapp.com/Knock/qsimage/000.jpg";
 var choices = ["選択肢1", "選択肢2", "選択肢3", "選択肢4"];
 var answers = ["回答1", "回答2", "回答3", "回答4"];
 var ms = messageTemplate.customQuestionMessage(title,imageUrl,choices,answers);
@@ -57,9 +59,17 @@ app.get('/index', function(request, response) {
 app.get('/home', function(request, response) {
   response.sendFile(path.join(__dirname + '/views/home.html'));
 });*/
+app.get('/*.(png|bmp|jpg|jpeg)',(req,res)=>{
+  fs.readFile('./qsimage/000.jpg',(err,data)=>{
+    if(err) throw err;
+    console.log("sendimage");
+    res.type('jpg');
+    res.send(data);
+  })
+});
 
 //指定時刻実行
-/*cron.schedule(QS[testnum].timer,()=>{
+cron.schedule(QS[testnum].timer,()=>{
   async.waterfall([
     function(callback){
       let mes = QS[testnum].qs;
@@ -77,7 +87,7 @@ app.get('/home', function(request, response) {
     client.multicast(QS[testnum].usrid,[mes]);
   })
   console.log("cron実行");
-});*/
+});
 
 
 app.post('/callback',knock);

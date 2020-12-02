@@ -64,7 +64,7 @@ app.use(bodyParser.json());
 
 
 app.post('/callback',knock);
-
+const planemessage = "登録：問題登録\nランキング:ランキング確認\n確認：自他の状況確認\n解説：問題の解説\n作問：配信Questionの作成\n編集：既存のQuestionの作成";
 function knock (req, res) {
     //console.log(req.headers);
     // リクエストがLINE Platformから送られてきたか確認する
@@ -103,14 +103,27 @@ function knock (req, res) {
         function(req, profile, message_id, message_type, message_text) {
             var message = "plane";
             let index,flag;
-            checkid(profile,flag).then(function(flag){
-                console.log("in 107"+flag);
+            checkid(profile,flag).then(function(flag){//初めてのユーザーか確認、結果をflagにしrootMessageに渡す
                 rootByMessage(profile,message_text,flag,message).then(function(message){
                     sendMessage.send(req, messageTemplate.textMessage(message));
                 })
             });
         }
     );
+}
+
+function pushMessage(qs_id){
+  return new Promise(function (resolve){
+    connection.query('select * from qs_ob where qs_id="'+qs_id+'"', function (error, results, fields){
+      if(error)throw error;
+      var title = "問題"+qs_id;
+      var imageUrl = '"'+results[0].qs_url+'"';
+      var choices = [ '"'+results[0].cs1+'"',  '"'+results[0].cs2+'"', '"'+results[0].cs3+'"','"'+results[0].cs4+'"'];
+      var answers = ["回答1", "回答2", "回答3", "回答4"];
+      var ms = messageTemplate.customQuestionMessage(title,imageUrl,choices,answers);
+      resolve(ms);
+    });
+  });
 }
 
 function checkid(profile,flag){
@@ -149,10 +162,13 @@ function rootByMessage(profile,message_text,flag,message){
           case "plane":
             if(message_text == "登録"){
               connection.query('update usrlist set flag="登録" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
-              message = "問題番号を入力してください";
+              message = "登録する問題番号を入力してください";
+            }else if(message_text == "解除"){
+              connection.query('update usrlist set flag="解除" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+              message = "解除する問題番号を入力してください";
             }else if(message_text == "ランキング"){
               connection.query('update usrlist set flag="ランキング" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
-              message = "問題番号を入力してください";
+              message = "ランキングを確認する問題番号を入力してください";
             }else if(message_text == "確認"){
               connection.query('update usrlist set flag="確認受付" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
               message = "あなたのユーザーネームは" + profile.userId + "です。\n";
@@ -161,19 +177,94 @@ function rootByMessage(profile,message_text,flag,message){
             }else if(message_text == "解説"){
               connection.query('update usrlist set flag="解説" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
               message = "問題番号を入力してください";
+            }else if(message_text == "作問"){
+              connection.query('update usrlist set flag="作問" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+              message = "作問";
+            }else if(message_text == "編集"){
+              connection.query('update usrlist set flag="編集" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+              message = "編集";
             }else{
               connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
-              message = "登録：問題登録\nランキング:ランキング確認\n確認：自他の状況確認\n解説：問題の解説";
+              message = planemessage;
             }
             resolve(message);
             break;
           case "登録":
-            message = "登録";
-            resolve(message);
+            connection.query('select count(*) as count from qslist where qs_id = "'+message_text+'"',function (error, results, fields){
+              if(error)throw error;
+              if(results[0].count != 0){
+                connection.query('select count(*) as count from rank_'+message_text+' where usr_id = "'+profile.userId+'"',function (error, results, fields){
+                  if(error)throw error;
+                  if(results[0].count == 0){
+                    connection.query('insert into rank_'+message_text+' values("'+profile.userId+'",NULL)',function (error, results, fields){
+                      if(error)throw error;
+                      message = "問題 " + message_text + "を登録しました";
+                      connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+                      resolve(message);
+                    });
+                  }else{
+                    message = "問題 " + message_text + "は登録済みです。";
+                    connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+                    resolve(message);
+                  }
+                });
+              }else{
+                message="存在しない問題番号です。";
+                connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+                resolve(message);
+              }
+            });
+            break;
+          case "解除":
+            connection.query('select count(*) as count from qslist where qs_id = "'+message_text+'"',function (error, results, fields){
+              if(error)throw error;
+              if(results[0].count != 0){
+                connection.query('select count(*) as count from rank_'+message_text+' where usr_id = "'+profile.userId+'"',function (error, results, fields){
+                  if(error)throw error;
+                  if(results[0].count != 0){
+                    connection.query('delete from rank_'+message_text+' where usr_id="'+profile.userId+'"',function (error, results, fields){
+                      if(error)throw error;
+                      message = "問題 " + message_text + "の登録を解除しました。";
+                      connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+                      resolve(message);
+                    });
+                  }else{
+                    message = "問題 " + message_text + "は登録されていません。";
+                    connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+                    resolve(message);
+                  }
+                });
+              }else{
+                message="存在しない問題番号です。";
+                connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+                resolve(message);
+              }
+            });
             break;
           case "ランキング":
-            message = "ランキング";
-            resolve(message);
+            connection.query('select count(*) as count from qslist where qs_id="'+message_text+'"',function (error, results, fields){
+              if(error)throw error;
+              if(results[0].count != 0){
+                connection.query('select qs_id,cast(lastday as date) as lastday from qslist where qs_id="'+message_text+'"',function (error, results, fields){
+                  console.log(results);
+                  if(error)throw error;
+                  message = message_text + "の最終実施日"+results[0].lastday+"のランキングは\n";
+                  connection.query('select * from rank_'+message_text+' where time is not null order by time',function (error, results, fields){
+                    if(error)throw error;
+                    console.log(results);
+                    for(let i=0;i<results.length;i++){
+                      message+=(i+1)+"位"+results[i].usr_id+"\n";
+                    }
+                    connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+                    resolve(message);
+                  });
+                });
+              }else{
+                message="存在しない問題番号です。";
+                connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
+                resolve(message);
+              }
+            });
             break;
           case "確認受付":
             message = "確認受付";
@@ -183,9 +274,14 @@ function rootByMessage(profile,message_text,flag,message){
             message = "解説";
             resolve(message);
             break;
+          default:
+            message = planemessage;
+            resolve(message);
+            break;
         }
     });
 }
+
 
 // 引数に指定した値以下のランダムな数値を取得する
 function getRandomInt(max) {
