@@ -42,25 +42,16 @@ app.use(bodyParser.json());
 
 
 //指定時刻実行
-/*cron.schedule(QS[testnum].timer,()=>{
-    async.waterfall([
-        function(callback){
-            let mes = QS[testnum].qs;
-            for(let i = 0;i < QS[testnum].usrid.length;i++){
-                for(let j = 0;j < usrlist.length;j++){
-                    if(usrlist[j].id == QS[testnum].usrid[i]){
-                        usrlist[j].flag = QS[testnum].id;
-                        break;
-                    }
-                }
-            }
-            callback(mes);
-        }
-    ],function(mes){
-        client.multicast(QS[testnum].usrid,[mes]);
-    })
+cron.schedule("00"+min+" "+hour+" * * *",()=>{
+    pushMessage("setqs").then(function(mes){
+      console.log(mes);
+      connection.query('select usr_id from usrlist',function (error, results, fields){
+        console.log(results);
+        client.multicast([results[0].usr_id],[mes]);
+      });
+    });
     console.log("cron実行");
-});*/
+});
 
 
 app.post('/callback',knock);
@@ -116,10 +107,19 @@ function pushMessage(qs_id){
   return new Promise(function (resolve){
     connection.query('select * from qs_ob where qs_id="'+qs_id+'"', function (error, results, fields){
       if(error)throw error;
+      console.log(results);
       var title = "問題"+qs_id;
       var imageUrl = '"'+results[0].qs_url+'"';
-      var choices = [ '"'+results[0].cs1+'"',  '"'+results[0].cs2+'"', '"'+results[0].cs3+'"','"'+results[0].cs4+'"'];
-      var answers = ["回答1", "回答2", "回答3", "回答4"];
+      var choices = [ '"'+results[0].cs1+'"',  '"'+results[0].cs2+'"'];
+      var answers = ["回答1", "回答2"];
+      if(results[0].cs3 != null){
+        choices.push('"'+results[0].cs3+'"');
+        answers.push("回答3");
+      }
+      if(results[0].cs4 != null){
+        choices.push('"'+results[0].cs4+'"');
+        answers.push("回答4");
+      }
       var ms = messageTemplate.customQuestionMessage(title,imageUrl,choices,answers);
       resolve(ms);
     });
