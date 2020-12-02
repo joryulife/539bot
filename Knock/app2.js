@@ -251,9 +251,12 @@ function rootByMessage(profile,message_text,flag,message){
                   message = message_text + "の最終実施日"+results[0].lastday+"のランキングは\n";
                   connection.query('select * from rank_'+message_text+' where time is not null order by time',function (error, results, fields){
                     if(error)throw error;
-                    console.log(results);
-                    for(let i=0;i<results.length;i++){
-                      message+=(i+1)+"位"+results[i].usr_id+"\n";
+                    if(results.length!=0){
+                      for(let i=0;i<results.length;i++){
+                        message+=(i+1)+"位"+results[i].usr_id+"\n";
+                      }
+                    }else{
+                      message = "まだランキングが存在しません。";
                     }
                     connection.query('update usrlist set flag="plane" where usr_id="'+profile.userId+'"',function (error, results, fields){if(error)throw error;});
                     resolve(message);
@@ -272,6 +275,14 @@ function rootByMessage(profile,message_text,flag,message){
             break;
           case "解説":
             message = "解説";
+            resolve(message);
+            break;
+          case "作問":
+            message="作問";
+            resolve(message);
+            break;
+          case "編集":
+            message = "編集";
             resolve(message);
             break;
           default:
