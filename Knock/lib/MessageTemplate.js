@@ -122,16 +122,20 @@ exports.quickMessage = function(questionText) {
 
 //カスタムクエッション（flexMessage)
 exports.customQuestionMessage = function(title, imageUrl, qustions, answers) {
-    return {
-        "type": "flex",
-        "altText": "this is a flex message",
-        "contents": customFunc(title, imageUrl, qustions, answers)
-    }
+  console.log("customQuestionMessage qustions "+ qustions);
+  return new Promise(resolve=>{
+    resolve({
+                "type": "flex",
+                "altText": "this is a flex message",
+                "contents": customFunc(title, imageUrl, qustions, answers)
+            });
+    });
 }
 
   function customFunc(title, imageUrl, qustions, answers) {
     switch(qustions.length){
       case 2:
+        //console.log("customFunc in 2");
         return {
           "type": "bubble",
           "hero": {
@@ -217,6 +221,7 @@ exports.customQuestionMessage = function(title, imageUrl, qustions, answers) {
         }
         break;
       case 3:
+        //console.log("customFunc in 3");
         return {
           "type": "bubble",
           "hero": {
@@ -328,6 +333,7 @@ exports.customQuestionMessage = function(title, imageUrl, qustions, answers) {
         }
         break;
       case 4:
+        //console.log("customFunc in 4");
         return {
           "type": "bubble",
           "hero": {
