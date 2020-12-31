@@ -95,29 +95,105 @@ exports.imageMessage = function(url, previewUrl) {
     }
 }
 
-exports.quickMessage = function(questionText) {
-    return {
-        "type": "text",
-        "text": questionText,
-        "quickReply": {
-        "items": [{
+exports.quickMessage = function(questionText,item) {
+  switch(item.length){
+    case 2:
+      return {
+          "type": "text",
+          "text": questionText,
+          "quickReply": {
+          "items": [{
+                  "type": "action",
+                  "action": {
+                      "type": "message",
+                      "label": item[0],
+                      "text": item[0]
+                  }
+              },
+              {
+                  "type": "action",
+                  "action": {
+                      "type": "message",
+                      "label": item[1],
+                      "text": item[1]
+                  }
+              }]
+          }
+      }
+      break;
+    case 3:
+      return {
+          "type": "text",
+          "text": questionText,
+          "quickReply": {
+          "items": [{
+                  "type": "action",
+                  "action": {
+                      "type": "message",
+                      "label": item[0],
+                      "text": item[0]
+                  }
+              },
+              {
+                  "type": "action",
+                  "action": {
+                      "type": "message",
+                      "label": item[1],
+                      "text": item[1]
+                  }
+              },
+              {
                 "type": "action",
-                "action": {
-                    "type": "message",
-                    "label": "ラベル１",
-                    "text": "ラベル１"
-                }
-            },
-            {
+                  "action": {
+                      "type": "message",
+                      "label": item[2],
+                      "text": item[2]
+                  }
+              }]
+          }
+      }
+      break;
+    case 4:
+      return {
+          "type": "text",
+          "text": questionText,
+          "quickReply": {
+          "items": [{
+                  "type": "action",
+                  "action": {
+                      "type": "message",
+                      "label": item[0],
+                      "text": item[0]
+                  }
+              },
+              {
+                  "type": "action",
+                  "action": {
+                      "type": "message",
+                      "label": item[1],
+                      "text": item[1]
+                  }
+              },
+              {
                 "type": "action",
-                "action": {
-                    "type": "message",
-                    "label": "ラベル２",
-                    "text": "ラベル２"
-                }
-            }]
-        }
-    }
+                  "action": {
+                      "type": "message",
+                      "label": item[2],
+                      "text": item[2]
+                  }
+              },{
+                "type": "action",
+                  "action": {
+                      "type": "message",
+                      "label": item[3],
+                      "text": item[3]
+                  }
+              }]
+          }
+      }
+      break;
+  }
+    
 }
 
 //カスタムクエッション（flexMessage)
