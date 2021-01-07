@@ -6,6 +6,7 @@ const async = require('async');
 const path = require("path");
 const util = require('util');
 const cron = require('node-cron');
+const cronJob = require('cron').CronJob
 const mysql = require("mysql");
 const fs = require('fs');
 
@@ -161,25 +162,40 @@ connection.query('select * from qs_gplist where GP=testgp1',(error, results, fie
 function setTimer(){
   connection.query('select * from qs_gplist',(error, results, fields)=>{
     if(error) throw error;
-    console.log("IN 145");
+    console.log("IN 165");
     console.log(results);
     for(let i=0;i < results.length;i++){
-      console.log("IN 148:"+i);
-      console.log(results[i].timer);
-      cron.schedule(results[i].timer,(results)=>{
-        connection.query('select * from qs_list weher GP=? and status=?',[results[i].GP,false],(err,results,fields)=>{
-          if(err) throw err;
-          connection.query('select * from qs_ob weher qs_id=?',[results[Math.floor( Math.random() * results.length )].qs_id],(err,results,fields)=>{
-            if(err) throw err;
-            let qs_ob = results;
-            connection.query('select usr_id from rank_?',[results[0].qs_id],(err,results,fields)=>{
-              if(err) throw err;
-              push(qs_ob,results);
+      console.log("IN 168:"+i);
+      console.log(results[i]);
+      cronjob = new cronJob({
+        cronTime:results[i].timer,
+        start:true,
+        context:{result:results[i]},
+        onTick:function(){
+          console.log("cron実行");
+          console.log(this.result);
+          connection.query('select * from qs_list where GP=?',[this.result.GP], function (error, results, fields){
+            if(error)throw error;
+            connection.query('select * from qs_ob where qs_id=?',[results[0].qs_id],(error, results, fields)=>{
+              if(error) throw error;
+              const qs_ob = results;
+              const rank = "rank_"+results[0].qs_id;
+              connection.query('select usr_id from ??',[rank],(err,results,fields)=>{
+                if(err) throw err;
+                console.log(results);
+                var usr_id = [];
+                for(let i = 0;i<results.length;i++){
+                  usr_id.push(results[i].usr_id);
+                  if(i==results.length-1){
+                    push(qs_ob,usr_id);
+                  }
+                }
+              });
             });
           });
-        });
-      });
-    }
+        }
+      })
+    } 
   });
 }
 
@@ -964,33 +980,9 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
-var rs;
-
 app.listen(app.get('port'), ()=> {
     console.log('Node app is running');
-    //setTimer();
-  connection.query('select * from qs_gplist where GP="testgp1"',(error, results, fields)=>{
-    if(error) throw error;
-    console.log("IN 971");
-    console.log(results);
-    rs = results;
-    console.log(rs);
-    cron.schedule("0,30 * * * * *",(rs)=>{
-      console.log("cron実行");
-      console.log(rs);
-      connection.query('select * from qs_list where GP=?',[rs[0].GP], function (error, results, fields){
-        if(error)throw error;
-        connection.query('select * from qs_ob weher qs_id=?',[rs[0].qs_id],(error, results, fields)=>{
-          if(error) throw error;
-          const qs_ob = results;
-          connection.query('select usr_id from rank_?',[rs[0].qs_id],(err,results,fields)=>{
-            if(err) throw err;
-            push(qs_ob,results);
-          });
-        });
-      });
-    });
-  });
+    setTimer();
 });
 
 /*

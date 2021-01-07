@@ -13,22 +13,33 @@ insert into qs_ob values("test002","https://539bot-joryulife.codeanyapp.com/Knoc
 
 insert into usrlist values("testusr001",'plane',null,null,'テストユーザー001');
 
-insert into qs_gplist values("testgp1","0,30 * 18 07 01 *",null,"password","U3aa127f38f35ddee3962757fe0d50eba");
-insert into qs_gplist values("testgp2","0,30 * 18 07 01 *",null,"password","U3aa127f38f35ddee3962757fe0d50eba");
+insert into qs_gplist values("testgp1","0 * * * * *",null,"password","U3aa127f38f35ddee3962757fe0d50eba");
+insert into qs_gplist values("testgp2","30 * * * * *",null,"password","U3aa127f38f35ddee3962757fe0d50eba");
 /*insert into qs_gplist values("testgp3","0,30 * 18 07 01 *",null,"password","U3aa127f38f35ddee3962757fe0d50eba");*/
 
-insert into qs_list values("test001","testgp1","0,30 * 18 07 01 *",null,false);
-/*insert into qs_list values("test002","testgp2","0,30 * 18 07 01 *",cast('2020-12-16 21:00:00.000000' as datetime),false);*/
+insert into qs_list values("test001","testgp1","0,30 * * * * *",null,false);
+insert into qs_list values("test002","testgp2","0,30 * * * * *",cast('2020-12-16 21:00:00.000000' as datetime),false);
 /*insert into qs_list values("test003","testgp3","0,30 * 18 07 01 *",cast('2020-12-16 21:00:00.000000' as datetime),false);*/
 
 insert into usrgp_list values("U3aa127f38f35ddee3962757fe0d50eba","testgp1");
-insert into usrgp_list values("Ucd77b5b80a9a97cf6a9066e408ff1203","testgp1");
+/*insert into usrgp_list values("Ucd77b5b80a9a97cf6a9066e408ff1203","testgp1");*/
+insert into usrgp_list values("Uffabcf2ec5a3d50360ae705f95a1d909","testgp1");
+insert into usrgp_list values("U2b948fca4c7ce8c760232c4d0218e713","testgp1");
 
-/*insert into usrgp_list values("U3aa127f38f35ddee3962757fe0d50eba","testgp2");
-insert into usrgp_list values("Ucd77b5b80a9a97cf6a9066e408ff1203","testgp2");*/
+insert into usrgp_list values("U3aa127f38f35ddee3962757fe0d50eba","testgp2");
+/*insert into usrgp_list values("Ucd77b5b80a9a97cf6a9066e408ff1203","testgp2");*/
+insert into usrgp_list values("Uffabcf2ec5a3d50360ae705f95a1d909","testgp2");
+insert into usrgp_list values("U2b948fca4c7ce8c760232c4d0218e713","testgp2");
 
 insert into rank_test001 values("U3aa127f38f35ddee3962757fe0d50eba","拓巳",now());
-insert into rank_test001 values("Ucd77b5b80a9a97cf6a9066e408ff1203","祐貴",now());
+/*insert into rank_test001 values("Ucd77b5b80a9a97cf6a9066e408ff1203","祐貴",now());*/
+insert into rank_test001 values("Uffabcf2ec5a3d50360ae705f95a1d909","ひろし",now());
+insert into rank_test001 values("U2b948fca4c7ce8c760232c4d0218e713","あゆみ",now());
+
+insert into rank_test002 values("U3aa127f38f35ddee3962757fe0d50eba","拓巳",now());
+/*insert into rank_test002 values("Ucd77b5b80a9a97cf6a9066e408ff1203","祐貴",now());*/
+insert into rank_test002 values("Uffabcf2ec5a3d50360ae705f95a1d909","ひろし",now());
+insert into rank_test002 values("U2b948fca4c7ce8c760232c4d0218e713","あゆみ",now());
 
 /*insert into rank_test002 values("U3aa127f38f35ddee3962757fe0d50eba","拓巳",cast('2020-12-16 21:00:00.000000' as datetime));
 insert into rank_test002 values("testuser002","テストユーザー002",cast('2020-12-16 21:05:00.000000' as datetime));
