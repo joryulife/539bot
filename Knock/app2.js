@@ -56,30 +56,18 @@ app.use(bodyParser.json());
 app.get('/*.(png|bmp|jpg|jpeg)',(req,res)=>{
   fs.readFile('./qsimage/A001.jpg',(err,data)=>{
     if(err) throw err;
-    console.log("sendimage");
+    console.log("59 sendimage");
     res.type('jpg');
     res.send(data);
   })
 });
 
-
-//指定時刻実行
-/*cron.schedule(sec+" "+min+" "+hour+" * * *",()=>{
-  console.log("cron実行");
-  connection.query('select * from qs_ob where qs_id=?',"A001", function (error, results, fields){
-      if(error)throw error;
-      console.log(results);
-      push(results);
-  });
-});*/
-
 app.post('/callback',knock);
 const planemessage = "登録：問題登録\nランキング:ランキング確認\n確認：自他の状況確認\n解説：問題の解説\n作問：配信Questionの作成\n編集：既存のQuestionの編集";
 function knock (req, res) {
-    //console.log(req.headers);
     // リクエストがLINE Platformから送られてきたか確認する
     if (!lineinfo.config.validate_signature(req.headers['x-line-signature'], req.body)) {
-        console.log('X-Line-Signature validation error');
+        console.log('70 X-Line-Signature validation error');
         return;
     }
 
@@ -117,7 +105,8 @@ function knock (req, res) {
               .then((flag)=>{//初めてのユーザーか確認、結果をflagにしrootMessageに渡す
                 if(flag=="new"){
                   var temp = "";
-                  rootByMessage(req,profile,message_text,flag,temp,message)
+                  var tempqs = "";
+                  rootByMessage(req,profile,message_text,flag,temp,tempqs,message)
                   .then((message)=>{
                     if(message!="end"){
                       sendMessage.send(req, messageTemplate.textMessage(message));
@@ -126,7 +115,7 @@ function knock (req, res) {
                   .catch((err)=>{console.log(err);})
                 }else{
                   connection.query('select * from usrlist where usr_id=?',[profile.userId],(error,results,fields)=>{
-                    rootByMessage(req,profile,message_text,flag,results[0].temp,results[0].tempqs,message)
+                    rootByMessage(req,profile,message_text,flag,results[0].temp,results[0].tempqs,results[0].target,message)
                     .then((message)=>{
                       if(message!="end"){
                         sendMessage.send(req, messageTemplate.textMessage(message));
@@ -140,79 +129,125 @@ function knock (req, res) {
     );
 }
 
-//指定時刻実行
-connection.query('select * from qs_gplist where GP=testgp1',(error, results, fields)=>{
-  cron.schedule("0,30 * 18 07 01 *",(results)=>{
-    console.log("cron実行");
-    connection.query('select * from qs_list where GP=?',[results[0].GP], function (error, results, fields){
-      if(error)throw error;
-      connection.query('select * from qs_ob weher qs_id=?',[results[0].qs_id],(error, results, fields)=>{
-        if(error) throw error;
-        const qs_ob = results;
-        connection.query('select usr_id from rank_?',[results[0].qs_id],(err,results,fields)=>{
-          if(err) throw err;
-          push(qs_ob,results);
-        });
-      });
-    });
-  });
-});
-
 
 function setTimer(){
+  console.log("134 set timer");
   connection.query('select * from qs_gplist',(error, results, fields)=>{
     if(error) throw error;
-    console.log("IN 165");
-    console.log(results);
     for(let i=0;i < results.length;i++){
-      console.log("IN 168:"+i);
-      console.log(results[i]);
       cronjob = new cronJob({
         cronTime:results[i].timer,
         start:true,
         context:{result:results[i]},
         onTick:function(){
-          console.log("cron実行");
-          console.log(this.result);
-          connection.query('select * from qs_list where GP=?',[this.result.GP], function (error, results, fields){
-            if(error)throw error;
-            connection.query('select * from qs_ob where qs_id=?',[results[0].qs_id],(error, results, fields)=>{
-              if(error) throw error;
-              const qs_ob = results;
-              const rank = "rank_"+results[0].qs_id;
-              connection.query('select usr_id from ??',[rank],(err,results,fields)=>{
-                if(err) throw err;
-                console.log(results);
-                var usr_id = [];
-                for(let i = 0;i<results.length;i++){
-                  usr_id.push(results[i].usr_id);
-                  if(i==results.length-1){
-                    push(qs_ob,usr_id);
-                  }
-                }
-              });
-            });
-          });
+          pushQs(this.result.GP);
         }
       })
     } 
   });
 }
 
+function pushQs(result){
+  connection.query('select * from qs_list where GP=? and status=?',[result,false],(error, results, fields)=>{
+    if(error)throw error;
+      if(results.length!=0){
+      var index = Math.floor( Math.random() * results.length )
+      const qs_id = results[index].qs_id;
+      connection.query('select * from qs_ob where qs_id=?',[qs_id],(error, results, fields)=>{
+        if(error) throw error;
+        const qs_ob = results;
+        const rank = "rank_"+qs_id;
+        connection.query('select usr_id from ??',[rank],(err,results,fields)=>{
+          if(err) throw err;
+          var usr_id = [];
+          for(let i = 0;i<results.length;i++){
+            let usrid = results[i].usr_id;
+            connection.query('select * from usrlist where usr_id=?',[usrid],(error,results,fields)=>{
+              if(error) throw error;
+              usrlistTargetUpdate(results[0].target,qs_id,usrid);
+            });
+            usr_id.push(results[i].usr_id);
+            if(i==results.length-1){
+              push(qs_ob,usr_id);
+            }
+          }
+        });
+        connection.query('update qs_list set lastday=now(),status=? where qs_id=?',[true,qs_id],(error,results,fields)=>{if(error) throw error;});
+      });
+      connection.query('update qs_gplist set lastday=now() where GP=?',[result],(error,results,fields)=>{if(error) throw error;});
+    }else{
+      console.log("179 all true");
+      connection.query('update qs_list set status=false where GP=?',[result],(error, results, fields)=>{
+        if(error) throw error;
+        pushQs(result);
+      });
+    }
+  });
+}
+
+async function usrlistTargetUpdate(target,qs_id,usrid){
+  try{
+    var wait = await jsonParse(target);
+    await targetPush(wait,qs_id);
+    var wait_json = await toJson(wait);
+    connection.query('update usrlist set target=? where usr_id=?',[wait_json,usrid],(error,results,fields)=>{
+      if(error) throw error;
+    });
+  }catch(e){
+    console.log(e);
+  }
+}
+
+async function toJson(data){
+  try{
+    var json = JSON.stringify(data);
+    return json;
+  }catch(e){
+    log(e);
+  }
+}
+
+async function jsonParse(json){
+  try{
+    var data = JSON.parse(json);
+    return  data;
+  }catch(e){
+    log(e);
+  }
+}
+
+async function targetPush(data,text){
+  try{
+    data.push(text);
+    return data;
+  }catch(e){
+    console.log(e);
+  }
+}
+
+async function targetPop(data){
+  try{
+    data.pop();
+    return data;
+  }catch(e){
+    console.log(e);
+  }
+}
+
 //DBからのデータをもとにFlexメッセージ作成用の配列を作成
 function createQsText(results){
-    console.log("in createQstext");
+    console.log("239 in createQstext");
     const title = results[0].qs_id;
     let imageUrl = results[0].qs_url;
     imageUrl = imageUrl.trim();
     let choices = [ results[0].cs1,results[0].cs2];
-    let answers = ["回答1", "回答2"];
+    let answers = ["問:"+title+"\n回答:1", "問:"+title+"\n回答:2"];
     if(results[0].cs3 != null){
         choices.push(results[0].cs3);
-        answers.push("回答3");
+        answers.push("問:"+title+"\n回答:3");
         if(results[0].cs4 != null){
             choices.push(results[0].cs4);
-            answers.push("回答4");
+            answers.push("問:"+title+"\n回答:4");
         }
     }
     return {title,imageUrl,choices,answers};//resolveならこれを返す、rejectならerrを返す
@@ -220,7 +255,7 @@ function createQsText(results){
 
 //各要素を受け取りFlexメッセージのobを生成して返す。
 async function createQsOb (title,imageUrl,choices,answers) {
-  console.log("createQsOb in ");
+  console.log("258 createQsOb in ");
   console.log(title,imageUrl,choices,answers);
   const ms = await messageTemplate.customQuestionMessage(title,imageUrl,choices,answers);
   return ms;
@@ -228,14 +263,14 @@ async function createQsOb (title,imageUrl,choices,answers) {
 
 //DBからのqs_obを受け取り送信までを行う。
 async function push (qs_ob,usr_id){
-  console.log("in");
+  console.log("266 push in");
   try{
     const ob = await createQsText(qs_ob);
     console.log(ob);
     const ms = await createQsOb(ob.title,ob.imageUrl.trim(),ob.choices,ob.answers);
-    for(let i=0;i<usr_id.length;i++){
+    /*for(let i=0;i<usr_id.length;i++){
       connection.query('update usrlist set flag=? where usr_id=?',[ob.title,usr_id[i]],(err,results,fields)=>{if(err) throw err;});
-    }
+    }*/
     client.multicast(usr_id,[ms]);
   } catch(e){
     console.log(e);
@@ -251,7 +286,7 @@ function checkid(profile,flag){
             }
             if(results.length == 0){
                 flag="new";
-                console.log("flag at checkid "+flag);
+                console.log("289 flag at checkid "+flag);
                 resolve(flag);
             }else{
                 connection.query('select flag from usrlist where usr_id=?',[profile.userId],(error, results, fields)=>{
@@ -267,12 +302,14 @@ function checkid(profile,flag){
 }
 
 //usrlistのflagの状態により処理を行う
-function rootByMessage(req,profile,message_text,flag,temp,tempqs,message){
+function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message){
     return new Promise(function(resolve){
-        console.log(flag);
+        console.log("307",flag);
         switch(flag){
           case "new":
-            connection.query('insert into usrlist values(?,"plane",null,null,?)',[profile.userId, profile.displayName],(error, results, fields)=>{
+            var wait = [];
+            var wait_json = JSON.stringify(wait);
+            connection.query('insert into usrlist values(?,"plane",null,null,?,?)',[profile.userId, profile.displayName,wait_json],(error, results, fields)=>{
               if(error){
                 throw error;
               }
@@ -307,6 +344,15 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,message){
             }else if(message_text == "編集"){
               connection.query('update usrlist set flag="編集" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
               message = "編集";
+            }else if(message_text.match(/^問:/)){
+              const qs_id = message_text.split(/[:\n]+/)[1];
+              const qsIndex = jsonParse(target).findIndex(qs_id);
+              if(qsIndex<0){
+                message="現在あなたは"+qs_id+"の回答権を持っていません。";
+                resolve(message);
+              }else{
+                const newTarget = target.splice(qsIndex,1);
+              }
             }else{
               connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
               message = planemessage;
@@ -335,7 +381,7 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,message){
               (async ()=>{
                 try{
                   message_text = await message_text.substr(3);
-                  console.log(message_text);
+                  console.log("378",message_text);
                   const results = await checkGp(message_text,true);
                   if(results.length!=0){
                     message = await deleteUsrList(profile,message_text,results);
@@ -396,9 +442,9 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,message){
               try{
                 if(message_text.match(/\w{33}:\w+/gu)){
                   let targetUsrId = message_text.substr(0,33);
-                  console.log(targetUsrId);
+                  console.log("439",targetUsrId);
                   let targetGpId = message_text.substr(34);
-                  console.log(targetGpId);
+                  console.log("441",targetGpId);
                   message = await getAchievement(targetUsrId,targetGpId,profile,message);
                   resolve(message);
                 }else{
@@ -424,7 +470,7 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,message){
             })();
             break;
           case "askAboutGP":
-            console.log("in askAboutGP");
+            console.log("463 in askAboutGP");
             if(message_text=="既存のGPに追加"){
               connection.query('update usrlist set flag="checkPreGPName" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
               message = "GP名を入力してください。";
@@ -782,8 +828,7 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,message){
               connection.query('select * from qs_ob where qs_id=?',[tempqs],(err,results,fields)=>{
                 if(err) throw err;
                 let qs_ob = results;
-                console.log("IN 744");
-                console.log(results);
+                //console.log(results);
                 connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
                 push(qs_ob,[profile.userId]);
               });
@@ -799,6 +844,8 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,message){
           case "編集":
             message = "編集";
             resolve(message);
+            break;
+          case "QS":
             break;
           default:
             message = planemessage;
@@ -828,7 +875,7 @@ function checkGp(message_text,gp){
 }
 
 function checkUsrGpList(profile,results){
-  console.log(results);
+  console.log("checkUsrGpList",results);
   return new Promise((resolve)=>{
     try{
       connection.query('select * from usrgp_list where GP=? and usr_id=?',[results[0].GP,profile.userId],(error,results,fields)=>{
@@ -925,7 +972,7 @@ function createRank(ranktable,results){
 //成績確認関係
 function getAchievement(targetUsrId,targetGpId,profile,message){
   return new Promise((resolve)=>{
-    connection.query('select qs_id,lastday from qs_list where GP = ? order by lastday',targetGpId,(error,results,fields)=>{
+    connection.query('select qs_id,lastday from qs_list where GP = ? order by lastday',[targetGpId],(error,results,fields)=>{
       if(error)throw error;
       var name;
       if(results.length!=0){
@@ -975,13 +1022,15 @@ function getDescription (profile,message_text){
   });
 }
 
-// 引数に指定した値以下のランダムな数値を取得する
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
+function setTargetArray(){
+  var wait = [];
+  var wait_json = JSON.stringify(wait);
+  connection.query('update usrlist set target = ?',[wait_json],(error,results,fields)=>{if(error) throw error;});
 }
 
 app.listen(app.get('port'), ()=> {
     console.log('Node app is running');
+    setTargetArray();
     setTimer();
 });
 
