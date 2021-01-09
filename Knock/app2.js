@@ -349,9 +349,16 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
               const qsIndex = jsonParse(target).findIndex(qs_id);
               if(qsIndex<0){
                 message="現在あなたは"+qs_id+"の回答権を持っていません。";
-                resolve(message);
               }else{
-                const newTarget = target.splice(qsIndex,1);
+                connection.query('select * from qs_ob where qs_id=?',[qs_id],(error, results, fields)=>{
+                  if(message_text.split(/[:\n]+/)[3]==results[0].CorrectAns){
+                    message="正解です。"
+                    const newTarget = target.splice(qsIndex,1);
+                    connection.query('update usrlist set target=? where usr_id=?',[newTarget,profile.userId],(error,results,fields)=>{if(error) throw error;});
+                  }else{
+                    message="end";
+                  }
+                });
               }
             }else{
               connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
@@ -780,18 +787,33 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
               connection.query('select * from qs_ob where qs_id=?',[tempqs],(error, results, fields)=>{
                 if(error)throw error;
                 if(message_text=="1"){
-                  connection.query('update qs_ob set CorrectAns=? where qs_id=?',[results[0].cs1,tempqs],(error, results, fields)=>{if(error)throw error;});
+                  connection.query('update qs_ob set CorrectAns=? where qs_id=?',[1,tempqs],(error, results, fields)=>{if(error)throw error;});
                 }else if(message_text=="2"){
-                  connection.query('update qs_ob set CorrectAns=? where qs_id=?',[results[0].cs2,tempqs],(error, results, fields)=>{if(error)throw error;});
+                  connection.query('update qs_ob set CorrectAns=? where qs_id=?',[2,tempqs],(error, results, fields)=>{if(error)throw error;});
                 }else if(message_text=="3"){
-                  connection.query('update qs_ob set CorrectAns=? where qs_id=?',[results[0].cs3,tempqs],(error, results, fields)=>{if(error)throw error;});
+                  connection.query('update qs_ob set CorrectAns=? where qs_id=?',[3,tempqs],(error, results, fields)=>{if(error)throw error;});
                 }else if(message_text=="4"){
-                  connection.query('update qs_ob set CorrectAns=? where qs_id=?',[results[0].cs4,tempqs],(error, results, fields)=>{if(error)throw error;});
+                  connection.query('update qs_ob set CorrectAns=? where qs_id=?',[4,tempqs],(error, results, fields)=>{if(error)throw error;});
                 }
                 connection.query('select * from qs_ob where qs_id=?',[tempqs],(error, results, fields)=>{
                   if(error) throw error;
                   message="end";
-                  sendMessage.send(req,messageTemplate.quickMessage(results[0].CorrectAns+"\nが正解でいいですか？",["はい","訂正:再入力","中止:homeに戻ります"]));
+                  var ans;
+                  switch(results[0].CorrectAns){
+                    case "1":
+                      ans = results[0].cs1;
+                      break;
+                    case "2":
+                      ans = results[0].cs2;
+                      break;
+                    case "3":
+                      ans = results[0].cs3;
+                      break;
+                    case "4":
+                      ans = results[0].cs4;
+                      break;
+                  }
+                  sendMessage.send(req,messageTemplate.quickMessage(ans+"\nが正解でいいですか？",["はい","訂正:再入力","中止:homeに戻ります"]));
                   resolve(message);
                 })
               });
