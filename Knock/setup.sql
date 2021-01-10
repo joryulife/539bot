@@ -1,5 +1,5 @@
 use Knockdb;
-create table qs_ob(qs_id varchar(20) primary key,qs_url varchar(200),cs1 varchar(20),cs2 varchar(20),cs3 varchar(20),cs4 varchar(20),CorrectAns varchar(20),password varchar(20),Description varchar(200),createusr varchar(35));
+create table qs_ob(qs_id varchar(20) primary key,qs_url varchar(200),cs1 varchar(20),cs2 varchar(20),cs3 varchar(20),cs4 varchar(20),CorrectAns varchar(20),password varchar(20),Description varchar(200),createusr varchar(35),must bool);
 create table usrlist(usr_id varchar(35) primary key,flag varchar(30),temp varchar(20),tempqs varchar(20),usr_name varchar(40),target json);
 create table qs_gplist(GP varchar(20) primary key,timer varchar(100),lastday datetime,password varchar(20),createusr varchar(35));
 create table qs_list(qs_id varchar(20) primary key,GP varchar(100),timer varchar(30),lastday datetime(6),status bool);
@@ -8,8 +8,8 @@ create table rank_test002(usr_id varchar(35),usr_name varchar(40),time datetime(
 create table rank_test003(usr_id varchar(35),usr_name varchar(40),time datetime(6));
 create table usrgp_list(usr_id varchar(35),GP varchar(20),primary key(usr_id,GP));
 
-insert into qs_ob values("test001","https://539bot-joryulife.codeanyapp.com/Knock/qsimage/A001.jpg","1/3","1/4","1/5","1/6","1/3","password","https://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba");
-insert into qs_ob values("test002","https://539bot-joryulife.codeanyapp.com/Knock/qsimage/A001.jpg","1/3","1/4",null,null,"1/3","password","https://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba");
+insert into qs_ob values("test001","https://539bot-joryulife.codeanyapp.com/Knock/qsimage/A001.jpg","1/3","1/4","1/5","1/6","1/3","password","https://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",true);
+insert into qs_ob values("test002","https://539bot-joryulife.codeanyapp.com/Knock/qsimage/A001.jpg","1/3","1/4",null,null,"1/3","password","https://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",false);
 
 insert into usrlist values("U3aa127f38f35ddee3962757fe0d50eba",'plane',null,null,'福應拓巳 🐗',null);
 /*
