@@ -32,20 +32,10 @@ const connection = mysql.createConnection({
     database: "Knockdb"
 })
 //時刻取得
-const now = new Date();
+/*const now = new Date();
 let hour = now.getHours();
 let min = now.getMinutes();
-let sec = now.getSeconds();
-if(sec >= 54){
-  sec = 5;
-  min = min + 1
-  if(min == 59){
-    min = 0;
-    hour++;
-  }
-}else{
-  sec = sec+5;
-}
+let sec = now.getSeconds();*/
 
 
 app.set('port',3000);
@@ -185,54 +175,6 @@ function pushQs(result){
   });
 }
 
-async function usrlistTargetUpdate(target,qs_id,usrid){
-  try{
-    var wait = await jsonParse(target);
-    await targetPush(wait,qs_id);
-    var wait_json = await toJson(wait);
-    connection.query('update usrlist set target=? where usr_id=?',[wait_json,usrid],(error,results,fields)=>{
-      if(error) throw error;
-    });
-  }catch(e){
-    console.log(e);
-  }
-}
-
-async function toJson(data){
-  try{
-    var json = JSON.stringify(data);
-    return json;
-  }catch(e){
-    log(e);
-  }
-}
-
-async function jsonParse(json){
-  try{
-    var data = JSON.parse(json);
-    return  data;
-  }catch(e){
-    log(e);
-  }
-}
-
-async function targetPush(data,text){
-  try{
-    data.push(text);
-    return data;
-  }catch(e){
-    console.log(e);
-  }
-}
-
-async function targetPop(data){
-  try{
-    data.pop();
-    return data;
-  }catch(e){
-    console.log(e);
-  }
-}
 
 //DBからのデータをもとにFlexメッセージ作成用の配列を作成
 function createQsText(results){
@@ -346,17 +288,31 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
               message = "編集";
             }else if(message_text.match(/^問:/)){
               const qs_id = message_text.split(/[:\n]+/)[1];
-              const qsIndex = jsonParse(target).findIndex(qs_id);
+              const NojsonTarget = jsonParse(target);
+              console.log(NojsonTarget);
+              const qsIndex = NojsonTarget.indexOf(qs_id);
+              const rank = "rank_"+qs_id;
               if(qsIndex<0){
                 message="現在あなたは"+qs_id+"の回答権を持っていません。";
               }else{
                 connection.query('select * from qs_ob where qs_id=?',[qs_id],(error, results, fields)=>{
                   if(message_text.split(/[:\n]+/)[3]==results[0].CorrectAns){
                     message="正解です。"
+                    connection.query('select * from ?? where usr_id=?',[rank,profile.userId],(error, results, fields)=>{
+                      if(error) throw error;
+                      const now = new Date();
+                      now.setMinutes(now.getMinutes+results[0].penalty*5);
+                      connection.query('update ?? set time=?,penalty=0 where usr_id=?',[rank,now,profile.userId],(error, results, fields)=>{if(error) throw error;});
+                    });
                     const newTarget = target.splice(qsIndex,1);
                     connection.query('update usrlist set target=? where usr_id=?',[newTarget,profile.userId],(error,results,fields)=>{if(error) throw error;});
+                  }else if(results[0].must==true){
+                    message="不正解です。timeに5分のペナルティが付きました。もう一度回答してください。";
+                    connection.query('update ?? set penalty=penalty+1',(error,results,fields)=>{if(error) throw error;});
+                    resolve(message);
                   }else{
-                    message="end";
+                    message="不正解です。記録を残しました。" ;
+                    resolve(message);
                   }
                 });
               }
@@ -637,7 +593,7 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
             if(message_text=="はい"){
               connection.query('update usrlist set flag="askqsformat" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
               message="end";
-              connection.query('insert into qs_ob(qs_id,password,createusr) values(?,"password",?)',[tempqs,profile.userId],(error, results, fields)=>{if(error)throw error;});
+              connection.query('insert into qs_ob(qs_id,password,createusr,must) values(?,"password",?,false)',[tempqs,profile.userId],(error, results, fields)=>{if(error)throw error;});
               sendMessage.send(req,messageTemplate.quickMessage("問題文の形式を選択してください。",["画像を送信","URLで送信","テキストで送信","texを送信"]));
               resolve(message);
             }else if(message_text=="訂正:再入力"){
@@ -826,11 +782,10 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
           case "askDes":
             if(message_text=="はい"){
               const rank = "rank_"+tempqs;
-              connection.query('create table ??(usr_id varchar(35),usr_name varchar(40),time datetime(6));',[rank],(error,results,fields)=>{if(error) throw error;});
-              connection.query('update usrlist set flag="test" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+              connection.query('create table ??(usr_id varchar(35),usr_name varchar(40),time datetime(6),penalty int(2));',[rank],(error,results,fields)=>{if(error) throw error;});
+              connection.query('update usrlist set flag="askMust" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
               message="end";
-              sendMessage.send(req,messageTemplate.quickMessage("testしますか？",["はい","中止:homeに戻ります"]));
-              resolve(message);
+              sendMessage.send(req,messageTemplate.quickMessage("回答回数は？",["一度切り","正解するまで","中止:homeに戻ります"]));
               resolve(message);
             }else if(message_text=="訂正:再入力"){
               message="解説文またはURLを入力してください。";
@@ -842,6 +797,29 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
             }else{
               message="end";
               sendMessage.send(req,messageTemplate.quickMessage(message_text+"\nを解説として登録します。",["はい","訂正:再入力","中止:homeに戻ります"]));
+              resolve(message);
+            }
+            break;
+          case "askMust":
+            if(message_text=="一度切り"){
+              connection.query('update usrlist set flag="test" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+              message="end";
+              sendMessage.send(req,messageTemplate.quickMessage("testしますか？",["はい","中止:homeに戻ります"]));
+              resolve(message);
+              resolve(message);
+            }else if(message_text=="正解するまで"){
+              connection.query('update qs_ob set must=true where qs_id=?',[tempqs],(error,results,fields)=>{if(error) throw error;});
+              message="end";
+              connection.query('update usrlist set flag="test" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+              sendMessage.send(req,messageTemplate.quickMessage("testしますか？",["はい","中止:homeに戻ります"]));
+              resolve(message);
+            }else if(message_text=="中止:homeに戻ります"){
+              connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+              message="中止しました。homeに戻ります。";
+              resolve(message);
+            }else{
+              message="end";
+              sendMessage.send(req,messageTemplate.quickMessage("不正な入力です。回答回数を設定してください。",["一度切り","正解するまで","中止:homeに戻ります"]));
               resolve(message);
             }
             break;
@@ -917,7 +895,7 @@ async function insertUsrList(profile,message_text,results){
       connection.query('select * from ?? where GP=?',["qs_list",results[0].GP],(error,results,fields)=>{
         if(error) throw error;
         for(let i = 0; i < results.length; i++){
-          connection.query('insert into ?? values(?,?,NULL)',["rank_"+results[0].qs_id,profile.userId,profile.displayName],(error,results,fields)=>{if(error) throw error;});
+          connection.query('insert into ?? values(?,?,NULL,0)',["rank_"+results[0].qs_id,profile.userId,profile.displayName],(error,results,fields)=>{if(error) throw error;});
         }
       });
       connection.query('insert into ?? values(?,?)',["usrgp_list",profile.userId,results[0].GP],(error,results,fields)=>{if(error) throw error;});
@@ -1052,19 +1030,65 @@ function setTargetArray(){
 
 app.listen(app.get('port'), ()=> {
     console.log('Node app is running');
-    setTargetArray();
-    setTimer();
+    testset();
+    //setTimer();
 });
 
-/*
-[ { id: '000', flag: 'plane', name: 'テストユーザー001' },
-  { id: 'U3aa127f38f35ddee3962757fe0d50eba',
-    flag: '001',
-    name: '福應拓巳 🐗' },
-  { id: 'Uffabcf2ec5a3d50360ae705f95a1d909',
-    flag: 'plane',
-    name: 'Hiroshi Fukuo' },
-  { id: 'U2b948fca4c7ce8c760232c4d0218e713',
-    flag: 'plane',
-    name: '福應あゆみ' } ]
-*/
+function testset(){
+  setTargetArray();
+  const rootUsr = "U3aa127f38f35ddee3962757fe0d50eba";
+  var wait = [];
+  wait.push("test001");
+  wait.push("test002");
+  var wait_json = JSON.stringify(wait);
+  connection.query('update usrlist set target = ? where usr_id=?',[wait_json,rootUsr],(error,results,fields)=>{if(error) throw error;});
+}
+
+async function usrlistTargetUpdate(target,qs_id,usrid){
+  try{
+    var wait = await jsonParse(target);
+    await targetPush(wait,qs_id);
+    var wait_json = await toJson(wait);
+    connection.query('update usrlist set target=? where usr_id=?',[wait_json,usrid],(error,results,fields)=>{
+      if(error) throw error;
+    });
+  }catch(e){
+    console.log(e);
+  }
+}
+
+async function toJson(data){
+  try{
+    var json = JSON.stringify(data);
+    return json;
+  }catch(e){
+    log(e);
+  }
+}
+
+async function jsonParse(json){
+  try{
+    var data = JSON.parse(json);
+    return  data;
+  }catch(e){
+    log(e);
+  }
+}
+
+async function targetPush(data,text){
+  try{
+    data.push(text);
+    return data;
+  }catch(e){
+    console.log(e);
+  }
+}
+
+async function targetPop(data){
+  try{
+    data.pop();
+    return data;
+  }catch(e){
+    console.log(e);
+  }
+}

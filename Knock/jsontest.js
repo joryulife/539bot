@@ -98,6 +98,8 @@ async function test(wait){
     json = await tojson(wait);
     wait = await rejson(json);
     await jpop(wait);
+    const index = wait.indexOf("111");
+    console.log(index);
     json = await tojson(wait);
     wait = await rejson(json);
   }

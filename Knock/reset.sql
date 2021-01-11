@@ -7,3 +7,4 @@ drop table rank_test002;
 drop table rank_test003;
 drop table usrlist;
 drop table usrgp_list;
+drop table rank_テスト4;
