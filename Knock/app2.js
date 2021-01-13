@@ -31,12 +31,6 @@ const connection = mysql.createConnection({
     password: "puroisenn96",
     database: "Knockdb"
 })
-//時刻取得
-/*const now = new Date();
-let hour = now.getHours();
-let min = now.getMinutes();
-let sec = now.getSeconds();*/
-
 
 app.set('port',3000);
 app.use(bodyParser.urlencoded({extended: true}));
@@ -44,16 +38,24 @@ app.use(bodyParser.json());
 
 //アクセスによるrooting
 app.get('/*.(png|bmp|jpg|jpeg)',(req,res)=>{
-  fs.readFile('./qsimage/A001.jpg',(err,data)=>{
+  console.log("AAAAAAAAAAAAAAAAAAAAAAAA");
+  fs.readFile('./qsimage/chart.png',(err,data)=>{
     if(err) throw err;
-    console.log("59 sendimage");
-    res.type('jpg');
+    console.log("49 sendimage");
+    res.type('png');
     res.send(data);
   })
 });
 
+  /*fs.readFile('./qsimage/A001.jpg',(err,data)=>{
+    if(err) throw err;
+    console.log("59 sendimage");
+    res.type('jpg');
+    res.send(data);
+  })*/
+
 app.post('/callback',knock);
-const planemessage = "登録：問題登録\nランキング:ランキング確認\n確認：自他の状況確認\n解説：問題の解説\n作問：配信Questionの作成\n編集：既存のQuestionの編集";
+const planemessage = "登録：問グループへ登録\n解除：問グループから登録解除\nランキング:ランキング確認\n確認：自他の状況確認\n解説：問題の解説\n作問：配信Questionの作成\n編集：既存のQuestionの編集";
 function knock (req, res) {
     // リクエストがLINE Platformから送られてきたか確認する
     if (!lineinfo.config.validate_signature(req.headers['x-line-signature'], req.body)) {
@@ -89,7 +91,7 @@ function knock (req, res) {
       ],
         // 返事を生成する関数
         (req, profile, message_id, message_type, message_text)=>{
-            var message = "plane";
+            var message = "";
             let index,flag="";
             checkid(profile,flag)
               .then((flag)=>{//初めてのユーザーか確認、結果をflagにしrootMessageに渡す
@@ -119,9 +121,8 @@ function knock (req, res) {
     );
 }
 
-
 function setTimer(){
-  console.log("134 set timer");
+  console.log("set timer");
   connection.query('select * from qs_gplist',(error, results, fields)=>{
     if(error) throw error;
     for(let i=0;i < results.length;i++){
@@ -166,7 +167,7 @@ function pushQs(result){
       });
       connection.query('update qs_gplist set lastday=now() where GP=?',[result],(error,results,fields)=>{if(error) throw error;});
     }else{
-      console.log("179 all true");
+      console.log("all true");
       connection.query('update qs_list set status=false where GP=?',[result],(error, results, fields)=>{
         if(error) throw error;
         pushQs(result);
@@ -177,8 +178,8 @@ function pushQs(result){
 
 
 //DBからのデータをもとにFlexメッセージ作成用の配列を作成
-function createQsText(results){
-    console.log("239 in createQstext");
+async function createQsText(results){
+    console.log("In createQstext");
     const title = results[0].qs_id;
     let imageUrl = results[0].qs_url;
     imageUrl = imageUrl.trim();
@@ -197,7 +198,7 @@ function createQsText(results){
 
 //各要素を受け取りFlexメッセージのobを生成して返す。
 async function createQsOb (title,imageUrl,choices,answers) {
-  console.log("258 createQsOb in ");
+  console.log("createQsOb in ");
   console.log(title,imageUrl,choices,answers);
   const ms = await messageTemplate.customQuestionMessage(title,imageUrl,choices,answers);
   return ms;
@@ -205,16 +206,14 @@ async function createQsOb (title,imageUrl,choices,answers) {
 
 //DBからのqs_obを受け取り送信までを行う。
 async function push (qs_ob,usr_id){
-  console.log("266 push in");
+  console.log("push in");
   try{
     const ob = await createQsText(qs_ob);
-    console.log(ob);
     const ms = await createQsOb(ob.title,ob.imageUrl.trim(),ob.choices,ob.answers);
-    /*for(let i=0;i<usr_id.length;i++){
-      connection.query('update usrlist set flag=? where usr_id=?',[ob.title,usr_id[i]],(err,results,fields)=>{if(err) throw err;});
-    }*/
+    console.log("==========MS========");
+    console.log(ms);
     client.multicast(usr_id,[ms]);
-  } catch(e){
+  }catch(e){
     console.log(e);
   }
 }
@@ -243,10 +242,145 @@ function checkid(profile,flag){
     });
 }
 
+function rootPlane(req,profile,message_text,flag,temp,tempqs,target,message){
+  return new Promise((resolve)=>{
+    if(message_text == "登録"){
+      connection.query('update usrlist set flag="登録" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      message = "登録する問題の番号を入力してください。GPには自動で登録されます。";
+      resolve(message);
+    }else if(message_text == "解除"){
+      connection.query('update usrlist set flag="解除" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      message = "解除するGP番号または問題番号を入力してください\nグループ番号で解除の場合\nGP:グループ番号\n問題番号で解除の場合\nQS:問題番号";
+      resolve(message);
+    }else if(message_text == "登録状況"){
+      message = profile.displayName+"さんの登録しているGPは";   
+      resolve(message);
+    }else if(message_text == "ランキング"){
+      connection.query('update usrlist set flag="ランキング" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      message = "ランキングを確認する問題番号を入力してください";
+      resolve(message);
+    }else if(message_text == "確認"){
+      connection.query('update usrlist set flag="確認受付" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      message = "あなたのidは" + profile.userId + "です。\n";
+      message+= "確認したい人のidとGP番号を以下書式で入力してください\n";
+      message+= "ユーザーid:GP番号";
+      resolve(message);
+    }else if(message_text == "解説"){
+      connection.query('update usrlist set flag="解説" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      message = "問題番号を入力してください";
+      resolve(message);
+    }else if(message_text == "作問"){
+      connection.query('update usrlist set flag="askAboutGP" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      message = "end";
+      sendMessage.send(req,messageTemplate.quickMessage("作成する問のGPについて",["既存のGPに追加","新規GPから作成"]));
+      resolve(message);
+    }else if(message_text == "編集"){
+      connection.query('update usrlist set flag="編集" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      message = "編集";
+      resolve(message);
+    }else if(message_text.match(/^問:/)){
+      connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      judgeAns(profile,message_text,target).then((message)=>{
+        resolve(message);
+      }).catch((e)=>{throw e;});  
+    }else{
+      connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+      message = planemessage;
+      resolve(message);
+    }
+  });
+}
+
+function judge1(qs_id){
+  return new Promise((resolve)=>{
+    const message="現在あなたは"+qs_id+"の回答権を持っていません。";
+    resolve(message);
+  });
+}
+
+function judge1(profile,message_text,notjsonTarget,qs_id,qsIndex,rank){
+  return new Promise((resolve)=>{
+    connection.query('select * from qs_ob where qs_id=?',[qs_id],(error, results, fields)=>{
+      console.log(message_text.split(/[:\n]+/)[3]);
+      if(message_text.split(/[:\n]+/)[3]==results[0].CorrectAns){
+        var message="正解です。"
+        var dt = new Date();
+        dt.setHours(dt.getHours()+14);
+        var year = dt.getFullYear();
+        var month = dt.getMonth()+1;
+        var date = dt.getDate();
+        const dateT = ["日","月","火","水","木","金","土"];
+        var day = dateT[dt.getDay()];
+        var hour = dt.getHours();
+        var min = dt.getMinutes();
+        var sec = dt.getSeconds();
+        connection.query('select * from ?? where usr_id=?',[rank,profile.userId],(error, results, fields)=>{
+          console.log(results[0]);
+          console.log("now",dt);
+          console.log("ペナルティ",results[0].penalty);
+          console.log("penaltytime",results[0].penalty*5);
+          if(min+results[0].penalty*5 >=60){
+            hour=hour+1;
+            min = results[0].penalty*5-(60-min);
+          }else{
+            min = min+results[0].penalty*5
+          }
+          const now = year+"-"+month+"-"+date+" "+hour+":"+min+":"+sec;
+          console.log("new now",now);
+          connection.query('update ?? set time=cast(? as datetime),penalty=0 where usr_id=?',[rank,now,profile.userId],(error, results, fields)=>{if(error) throw error;});
+          const newTarget = JSON.stringify(notjsonTarget.splice(qsIndex,1));
+          connection.query('update usrlist set target=? where usr_id=?',[newTarget,profile.userId],(error,results,fields)=>{if(error) throw error;});
+          message+= now+"\nで記録しました。";
+          resolve(message);
+        });
+      }else if(results[0].must==true){
+        const message="不正解です。timeに5分のペナルティが付きました。もう一度回答してください。";
+        connection.query('update ?? set penalty=penalty+1 where usr_id=?',[rank,profile.userId],(error,results,fields)=>{if(error) throw error;});
+        resolve(message);
+      }else{
+        const message="不正解です。記録を残しました。" ;
+        const now = new Date();
+        now.setMinutes(now.getMinutes+results[0].penalty*5);
+        connection.query('update ?? set time=?,penalty=0 where usr_id=?',[rank,now,profile.userId],(error, results, fields)=>{if(error) throw error;});
+        const newTarget = JSON.stringify(notjsonTarget.splice(qsIndex,1));
+        connection.query('update usrlist set target=? where usr_id=?',[newTarget,profile.userId],(error,results,fields)=>{if(error) throw error;});
+        resolve(message);
+      }
+    });
+  });
+}
+
+//正誤判定、成績記録
+function judgeAns(profile,message_text,target){
+  return new Promise((resolve)=>{
+    const qs_id = message_text.split(/[:\n]+/)[1];
+    console.log("target",target);
+    const notjsonTarget = JSON.parse(target);
+    console.log("notjsonTarget",notjsonTarget);
+    const qsIndex = notjsonTarget.indexOf(qs_id);
+    const rank = "rank_"+qs_id;
+    if(qsIndex<0){
+      judge1(qs_id).then((m)=>{
+        console.log(m);
+        resolve(m);
+      }).catch((e)=>{
+        console.log(e);
+      });
+    }else{
+      judge1(profile,message_text,notjsonTarget,qs_id,qsIndex,rank).then((m)=>{
+        console.log(m);
+        resolve(m);
+      }).catch((e)=>{
+        console.log(e);
+      });
+    }
+  });
+}
+
 //usrlistのflagの状態により処理を行う
 function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message){
     return new Promise(function(resolve){
-        console.log("307",flag);
+        console.log(flag);
         switch(flag){
           case "new":
             var wait = [];
@@ -260,67 +394,12 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
             resolve(message);
             break;
           case "plane":
-            if(message_text == "登録"){
-              connection.query('update usrlist set flag="登録" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
-              message = "登録する問題の番号を入力してください。GPには自動で登録されます。";
-            }else if(message_text == "解除"){
-              connection.query('update usrlist set flag="解除" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
-              message = "解除するGP番号または問題番号を入力してください\nグループ番号で解除の場合\nGP:グループ番号\n問題番号で解除の場合\nQS:問題番号";
-            }else if(message_text == "登録状況"){
-              message = profile.displayName+"さんの登録しているGPは";       
-            }else if(message_text == "ランキング"){
-              connection.query('update usrlist set flag="ランキング" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
-              message = "ランキングを確認する問題番号を入力してください";
-            }else if(message_text == "確認"){
-              connection.query('update usrlist set flag="確認受付" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
-              message = "あなたのユーザーネームは" + profile.userId + "です。\n";
-              message+= "確認したい人のidとGP番号を以下書式で入力してください\n";
-              message+= "ユーザーid:GP番号";
-            }else if(message_text == "解説"){
-              connection.query('update usrlist set flag="解説" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
-              message = "問題番号を入力してください";
-            }else if(message_text == "作問"){
-              connection.query('update usrlist set flag="askAboutGP" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
-              message = "end";
-              sendMessage.send(req,messageTemplate.quickMessage("作成する問のGPについて",["既存のGPに追加","新規GPから作成"]));
-            }else if(message_text == "編集"){
-              connection.query('update usrlist set flag="編集" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
-              message = "編集";
-            }else if(message_text.match(/^問:/)){
-              const qs_id = message_text.split(/[:\n]+/)[1];
-              const NojsonTarget = jsonParse(target);
-              console.log(NojsonTarget);
-              const qsIndex = NojsonTarget.indexOf(qs_id);
-              const rank = "rank_"+qs_id;
-              if(qsIndex<0){
-                message="現在あなたは"+qs_id+"の回答権を持っていません。";
-              }else{
-                connection.query('select * from qs_ob where qs_id=?',[qs_id],(error, results, fields)=>{
-                  if(message_text.split(/[:\n]+/)[3]==results[0].CorrectAns){
-                    message="正解です。"
-                    connection.query('select * from ?? where usr_id=?',[rank,profile.userId],(error, results, fields)=>{
-                      if(error) throw error;
-                      const now = new Date();
-                      now.setMinutes(now.getMinutes+results[0].penalty*5);
-                      connection.query('update ?? set time=?,penalty=0 where usr_id=?',[rank,now,profile.userId],(error, results, fields)=>{if(error) throw error;});
-                    });
-                    const newTarget = target.splice(qsIndex,1);
-                    connection.query('update usrlist set target=? where usr_id=?',[newTarget,profile.userId],(error,results,fields)=>{if(error) throw error;});
-                  }else if(results[0].must==true){
-                    message="不正解です。timeに5分のペナルティが付きました。もう一度回答してください。";
-                    connection.query('update ?? set penalty=penalty+1',(error,results,fields)=>{if(error) throw error;});
-                    resolve(message);
-                  }else{
-                    message="不正解です。記録を残しました。" ;
-                    resolve(message);
-                  }
-                });
-              }
-            }else{
-              connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
-              message = planemessage;
-            }
-            resolve(message);
+            rootPlane(req,profile,message_text,flag,temp,tempqs,target,message).then((message1)=>{
+              console.log("355",message1);
+              return message1;
+            }).then((message)=>{
+              resolve(message);
+            }).catch((e)=>{throw e;});
             break;
           case "登録":
             (async ()=>{
@@ -385,7 +464,49 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
               connection.query('select qs_id,lastday from qs_list where qs_id=?',[message_text],(error, results, fields)=>{
                 if(error)throw error;
                 if(results.length != 0){
-                  message = message_text + "の最終実施日"+results[0].lastday+"のランキングは\n";
+                  var str="";
+                  str +=results[0].lastday;
+                  str = str.split(/\s/);
+                  var ld="";
+                  switch(str[1]){
+                    case "Jan":
+                      ld+="1月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Feb":
+                      ld+="2月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Mar":
+                      ld+="3月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Apr":
+                      ld+="4月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "May":
+                      ld+="5月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Jun":
+                      ld+="6月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Jul":
+                      ld+="7月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Aug":
+                      ld+="8月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Sep":
+                      ld+="9月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Oct":
+                      ld+="10月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Nov":
+                      ld+="11月"+str[2]+"日"+str[4]+"時";
+                      break;
+                    case "Dec":
+                      ld+="12月"+str[2]+"日"+str[4]+"時";
+                      break;
+                  }
+                  message = message_text + "の最終実施日"+ld+"のランキングは\n";
                   (async ()=>{
                     const ranktable = 'rank_'+message_text;
                     message += await createRank(ranktable,results);
@@ -403,11 +524,12 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
           case "確認受付":
             (async ()=>{
               try{
-                if(message_text.match(/\w{33}:\w+/gu)){
+                console.log(message_text);
+                if(message_text.match(/\w{33}:.+/gu)){
                   let targetUsrId = message_text.substr(0,33);
-                  console.log("439",targetUsrId);
+                  console.log("targetUsrId",targetUsrId);
                   let targetGpId = message_text.substr(34);
-                  console.log("441",targetGpId);
+                  console.log("targetGpId",targetGpId);
                   message = await getAchievement(targetUsrId,targetGpId,profile,message);
                   resolve(message);
                 }else{
@@ -681,6 +803,31 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
               }
             }
             break;
+          /*case "waittex":
+            if(message_text=="はい"){
+              connection.query('update usrlist set flag="askCs" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+              message="2~4の選択肢を改行区切りで入力してください。";
+              resolve(message);
+            }else if(message_text=="訂正:再入力"){
+              message="tex形式のテキストを入力してください。";
+              resolve(message);
+            }else if(message_text=="中止:homeに戻ります"){
+              connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
+              message="中止しました。homeに戻ります。";
+              resolve(message);
+            }else{
+              if(message_text.match(/^https/)){
+                message="end";
+                connection.query('update qs_ob set qs_url=? where qs_id=?',[message_text,tempqs],(error, results, fields)=>{if(error)throw error;});
+                sendMessage.send(req,messageTemplate.quickMessage(message_text+"\n確認できましたか？",["はい","訂正:再入力","中止:homeに戻ります"]));
+                resolve(message);
+              }else{
+                message="end";
+                sendMessage.send(req,messageTemplate.quickMessage("不正なURLです。https形式の有効なURLを入力してください。",["訂正:再入力","中止:homeに戻ります"]));
+                resolve(message);
+              }
+            }
+            break;*/
           case "askCs":
              if(message_text=="はい"){
               connection.query('update usrlist set flag="askAns" where usr_id=?',[profile.userId],(error, results, fields)=>{if(error)throw error;});
@@ -856,7 +1003,6 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
     });
 }
 
-
 //登録、解除関係
 function checkGp(message_text,gp){
   return new Promise((resolve)=>{
@@ -955,7 +1101,50 @@ function createRank(ranktable,results){
         if(results.length!=0){
           var message = "";
           for(let i=0;i<results.length;i++){
+            var str="";
+            str +=results[i].time;
+            str = str.split(/\s/);
+            var ld="";
+            switch(str[1]){
+              case "Jan":
+                ld+="1月"+str[2]+"日"+str[4];
+                break;
+              case "Feb":
+                ld+="2月"+str[2]+"日"+str[4];
+                break;
+              case "Mar":
+                ld+="3月"+str[2]+"日"+str[4];
+                break;
+              case "Apr":
+                ld+="4月"+str[2]+"日"+str[4];
+                break;
+              case "May":
+                ld+="5月"+str[2]+"日"+str[4];
+                break;
+              case "Jun":
+                ld+="6月"+str[2]+"日"+str[4];
+                break;
+              case "Jul":
+                ld+="7月"+str[2]+"日"+str[4];
+                break;
+              case "Aug":
+                ld+="8月"+str[2]+"日"+str[4];
+                break;
+              case "Sep":
+                ld+="9月"+str[2]+"日"+str[4];
+                break;
+              case "Oct":
+                ld+="10月"+str[2]+"日"+str[4];
+                break;
+              case "Nov":
+                ld+="11月"+str[2]+"日"+str[4];
+                break;
+              case "Dec":
+                ld+="12月"+str[2]+"日"+str[4];
+                break;
+            }
             message+=(i+1)+"位"+results[i].usr_name+"\n";
+            message+="タイム:"+ld+"\n";
           }
           resolve(message);
         }else{
@@ -974,25 +1163,117 @@ function getAchievement(targetUsrId,targetGpId,profile,message){
   return new Promise((resolve)=>{
     connection.query('select qs_id,lastday from qs_list where GP = ? order by lastday',[targetGpId],(error,results,fields)=>{
       if(error)throw error;
-      var name;
       if(results.length!=0){
         for(let i=0;i<results.length;i++){
+          console.log("成績 i",i);
+          console.log(results[i]);
           const ranktable = 'rank_'+results[i].qs_id;
+          console.log("ランクテーブル",ranktable);
           const lastday = results[i].lastday;
-          connection.query('select usr_name,time from ?? where usr_id=?',[ranktable,targetUsrId],(error,results,fields)=>{
+          connection.query('select * from ?? where usr_id=?',[ranktable,targetUsrId],(error,results,fields)=>{
             if(error)throw error;
-            name = results[i].usr_name;
+            var str="";
+            str +=lastday;
+            str = str.split(/\s/);
+            var ld="";
+            switch(str[1]){
+              case "Jan":
+                ld+="1月"+str[2]+"日"+str[4];
+                break;
+              case "Feb":
+                ld+="2月"+str[2]+"日"+str[4];
+                break;
+              case "Mar":
+                ld+="3月"+str[2]+"日"+str[4];
+                break;
+              case "Apr":
+                ld+="4月"+str[2]+"日"+str[4];
+                break;
+              case "May":
+                ld+="5月"+str[2]+"日"+str[4];
+                break;
+              case "Jun":
+                ld+="6月"+str[2]+"日"+str[4];
+                break;
+              case "Jul":
+                ld+="7月"+str[2]+"日"+str[4];
+                break;
+              case "Aug":
+                ld+="8月"+str[2]+"日"+str[4];
+                break;
+              case "Sep":
+                ld+="9月"+str[2]+"日"+str[4];
+                break;
+              case "Oct":
+                ld+="10月"+str[2]+"日"+str[4];
+                break;
+              case "Nov":
+                ld+="11月"+str[2]+"日"+str[4];
+                break;
+              case "Dec":
+                ld+="12月"+str[2]+"日"+str[4];
+                break;
+            }
+            console.log(ld);
             if(results[0].time >= lastday){
-              message+=lastday+" ○\n";
+              var str2 = "";
+              str2 +=results[0].time;
+              str2 = str2.split(/\s/);
+              var ld2="";
+              switch(str2[1]){
+                case "Jan":
+                  ld2+="1月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Feb":
+                  ld2+="2月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Mar":
+                  ld2+="3月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Apr":
+                  ld2+="4月"+str2[2]+"日"+str2[4];
+                  break;
+                case "May":
+                  ld2+="5月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Jun":
+                  ld2+="6月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Jul":
+                  ld2+="7月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Aug":
+                  ld2+="8月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Sep":
+                  ld2+="9月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Oct":
+                  ld2+="10月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Nov":
+                  ld2+="11月"+str2[2]+"日"+str2[4];
+                  break;
+                case "Dec":
+                  ld2+="12月"+str2[2]+"日"+str2[4];
+                  break;
+            }
+              message+=ld+" ○\n";
+              message+="回答時刻:"+ld2+"\n";
             }else{
-              message+=lastday+" X\n";
+              message+=ld+" X\n";
             }
           });
         }
-        connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{
-          if(error)throw error;
-          message = name+"さんの成績は\n"+message;
-          resolve(message);
+        connection.query('select * from usrlist where usr_id=?',[targetUsrId],(error,results,fields)=>{
+          if(error) throw error;
+          console.log(results);
+          const name = results[0].usr_name;
+          connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{
+            if(error)throw error;
+            message = name+"さんの"+targetGpId+"の成績は\n"+message;
+            resolve(message);
+          });
         });
       }else{
         connection.query('update usrlist set flag="plane" where usr_id=?',[profile.userId],(error, results, fields)=>{
@@ -1028,18 +1309,10 @@ function setTargetArray(){
   connection.query('update usrlist set target = ?',[wait_json],(error,results,fields)=>{if(error) throw error;});
 }
 
-app.listen(app.get('port'), ()=> {
-    console.log('Node app is running');
-    testset();
-    //setTimer();
-});
-
 function testset(){
   setTargetArray();
   const rootUsr = "U3aa127f38f35ddee3962757fe0d50eba";
   var wait = [];
-  wait.push("test001");
-  wait.push("test002");
   var wait_json = JSON.stringify(wait);
   connection.query('update usrlist set target = ? where usr_id=?',[wait_json,rootUsr],(error,results,fields)=>{if(error) throw error;});
 }
@@ -1047,8 +1320,10 @@ function testset(){
 async function usrlistTargetUpdate(target,qs_id,usrid){
   try{
     var wait = await jsonParse(target);
+    console.log("wait",wait);
     await targetPush(wait,qs_id);
     var wait_json = await toJson(wait);
+    console.log("wait_json",wait_json);
     connection.query('update usrlist set target=? where usr_id=?',[wait_json,usrid],(error,results,fields)=>{
       if(error) throw error;
     });
@@ -1092,3 +1367,49 @@ async function targetPop(data){
     console.log(e);
   }
 }
+
+const now = new Date();
+let sec = now.getSeconds();
+let hour = now.getHours();
+let min = now.getMinutes();
+sec++;
+if(sec ==60){
+  sec = 5;
+  min++;
+}
+if(min == 59){
+  min = 0;
+  hour++;
+}
+
+function HaishinTest(){
+  return new Promise((resolve)=>{
+    connection.query('insert into qs_gplist values("配信testgp",?,null,"password","U3aa127f38f35ddee3962757fe0d50eba")',[sec+" "+min+" "+hour+" * * *"],(error,results,fields)=>{
+      if(error) throw error;
+    });
+    const m = "配信テストセット"
+    resolve(m);
+  });
+}
+
+app.listen(app.get('port'), ()=> {
+    console.log('Node app is running');
+    testset();
+    HaishinTest().then((m)=>{
+      console.log(m);
+      setTimer();
+    }).catch((e)=>{
+      console.log(e);
+    });
+});
+
+/*cron.schedule(sec+' '+min+' '+hour+' * * *',()=>{
+  connection.query('select * from qs_ob where qs_id="test"',(error, results, fields)=>{
+    console.log(results);
+    if(error) throw error;
+    const qs_ob = results;
+    const usr_id = ["U3aa127f38f35ddee3962757fe0d50eba"];
+    push(qs_ob,usr_id);
+  });
+});*/
+

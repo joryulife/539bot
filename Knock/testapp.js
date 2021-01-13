@@ -32,69 +32,35 @@ const connection = mysql.createConnection({
     database: "Knockdb"
 })
 
-async function tojson(data){
-  try{
-    console.log("in tojason");
-    var json = JSON.stringify(data);
-    console.log(json);
-    return json;
-  }catch(e){
-    log(e);
-  }
-}
-
-async function rejson(json){
-  try{
-    console.log("in rejson");
-    var data = JSON.parse(json);
-    console.log(data);
-    return  data;
-  }catch(e){
-    log(e);
-  }
-}
-
-async function jpush(data,text){
-  try{
-    console.log("in jpush");
-    data.push(text);
-    return data;
-  }catch(e){
-    console.log(e);
-  }
-}
-
-async function jpop(data){
-  try{
-    console.log("in jpop");
-    data.pop();
-    return data;
-  }catch(e){
-    console.log(e);
-  }
-}
-
-async function test(wait){
-    console.log("in");
-    var json = await tojson(wait);
-    wait = await rejson(json);
-    await jpush(wait,"111");
-    await jpush(wait,"222");
-    json = await tojson(wait);
-    wait = await rejson(json);
-    await jpop(wait);
-    const index = wait.indexOf("111");
-    console.log(index);
-    json = await tojson(wait);
-    wait = await rejson(json);
-  }
-
 app.set('port',3000);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
+function ImgSend(title, imageUrl, choices, answers){
+  return new Promise((resolve)=>{
+    const ob = messageTemplate.customQuestionMessage(title, imageUrl, choices, answers);
+    resolve(ob);
+  });
+}
+
+app.post('/callback',(req,res)=>{
+  const event_data = req.body.events[0];
+  const message_text = event_data.message.text;
+  console.log(message_text);
+  const title = "確認できましたか？";
+  const imageUrl = "https://chart.apis.google.com/chart?chs=657x359&cht=tx&chl="+message_text.trim();
+  console.log(imageUrl);
+  const choices = ["はい","訂正:再入力","中止:homeに戻ります"];
+  const answers = ["はい","訂正:再入力","中止:homeに戻ります"];
+  ImgSend(title, imageUrl, choices, answers).then((ob)=>{
+    console.log(ob);
+    sendMessage.send(req,ob);
+  }).catch((e)=>{
+    console.log(e);
+    sendMessage.send(req,messageTemplate.quickMessage("不正な入力です。",["訂正:再入力","中止:homeに戻ります"]));
+  })
+});
+
 app.listen(app.get('port'), ()=> {
   console.log('Node app is running');
-  var wait = [];
-  test(wait);
 });
