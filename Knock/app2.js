@@ -39,20 +39,14 @@ app.use(bodyParser.json());
 //アクセスによるrooting
 app.get('/*.(png|bmp|jpg|jpeg)',(req,res)=>{
   console.log("AAAAAAAAAAAAAAAAAAAAAAAA");
-  fs.readFile('./qsimage/chart.png',(err,data)=>{
+  fs.readFile('./qsimage/000.jpg',(err,data)=>{
     if(err) throw err;
-    console.log("49 sendimage");
-    res.type('png');
+    console.log("sendimage");
+    res.type('jpg');
     res.send(data);
   })
 });
 
-  /*fs.readFile('./qsimage/A001.jpg',(err,data)=>{
-    if(err) throw err;
-    console.log("59 sendimage");
-    res.type('jpg');
-    res.send(data);
-  })*/
 
 app.post('/callback',knock);
 const planemessage = "登録：問グループへ登録\n解除：問グループから登録解除\nランキング:ランキング確認\n確認：自他の状況確認\n解説：問題の解説\n作問：配信Questionの作成\n編集：既存のQuestionの編集";
@@ -159,6 +153,7 @@ function pushQs(result){
             });
             usr_id.push(results[i].usr_id);
             if(i==results.length-1){
+              console.log("=========To push =========");
               push(qs_ob,usr_id);
             }
           }
@@ -841,7 +836,7 @@ function rootByMessage(req,profile,message_text,flag,temp,tempqs,target,message)
               message="中止しました。homeに戻ります。";
               resolve(message);
             }else{
-              if(message_text.match(/^.+\n.+\n.+\n.+/)){
+              if(message_text.match(/^.+(\n.+){1,3}/)){
                 const cs = message_text.split('\n');
                 if(cs.length==2){
                   const css = "選択肢1:"+cs[0]+"\n選択肢2:"+cs[1];
@@ -1324,9 +1319,7 @@ async function usrlistTargetUpdate(target,qs_id,usrid){
     await targetPush(wait,qs_id);
     var wait_json = await toJson(wait);
     console.log("wait_json",wait_json);
-    connection.query('update usrlist set target=? where usr_id=?',[wait_json,usrid],(error,results,fields)=>{
-      if(error) throw error;
-    });
+    connection.query('update usrlist set target=? where usr_id=?',[wait_json,usrid],(error,results,fields)=>{if(error) throw error;});
   }catch(e){
     console.log(e);
   }
