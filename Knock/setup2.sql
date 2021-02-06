@@ -16,7 +16,7 @@ create table rank_配信test(usr_id varchar(35),usr_name varchar(40),time dateti
 create table rank_test(usr_id varchar(35),usr_name varchar(40),time datetime(6),penalty int(2));
 create table usrgp_list(usr_id varchar(35),GP varchar(20),primary key(usr_id,GP));
 
-insert into qs_ob values("解説test","https://539bot-joryulife.codeanyapp.com/Knock/qsimage/000.jpg","1/3","1/4","1/5","1/6","1","password","∫[-1,0]x^2/1+2^(x)dx+∫[0,1]x^2/1+2^(x) dxと分けて第一項をx=-tに詳しくは\nhttps://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",true);
+insert into qs_ob values("解説test","https://539bot-joryulife.codeanyapp.com/Knock/qsimage/A001.jpg","1/3","1/4","1/5","1/6","1","password","∫[-1,0]x^2/1+2^(x)dx+∫[0,1]x^2/1+2^(x) dxと分けて第一項をx=-tに詳しくは\nhttps://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",true);
 insert into qs_ob values("test","https://i1.wp.com/math-note.xyz/wp-content/uploads/2020/04/Gauss%E7%A9%8D%E5%88%86.png?w=3000&ssl=1","1/3","1/4",null,null,"1","password","https://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",false);
 /*https://i1.wp.com/math-note.xyz/wp-content/uploads/2020/04/Gauss%E7%A9%8D%E5%88%86.png?w=3000&ssl=1*/
 /*https://chart.apis.google.com/chart?cht=tx&chl=\[\int_a^b%20f(x)dx\]*/
@@ -28,12 +28,11 @@ insert into usrlist values("U2b948fca4c7ce8c760232c4d0218e713",'plane',null,null
 
 /*配信機能テスト*/
 /*insert into qs_gplist values("配信testgp","0,15,30,45 * * * * *",cast('2021-01-10 21:00:00.000000' as datetime),"password","U3aa127f38f35ddee3962757fe0d50eba");*/
-
-insert into qs_ob values("配信test","https://539bot-joryulife.codeanyapp.com/Knock/qsimage/000.jpg","1/3","1/4","1/5","1/6","1","password","∫[-1,0]x^2/1+2^(x)dx+∫[0,1]x^2/1+2^(x) dxと分けて第一項をx=-tに詳しくは\nhttps://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",true);
-
 /*
-insert into qs_ob values("配信test","https://chart.apis.google.com/chart?cht=tx&chl=\[\int_a^b%20f(x)dx\]","1/3","1/4","1/5","1/6","1","password","∫[-1,0]x^2/1+2^(x)dx+∫[0,1]x^2/1+2^(x) dxと分けて第一項をx=-tに詳しくは\nhttps://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",true);
+insert into qs_ob values("配信test","https://539bot-joryulife.codeanyapp.com/Knock/qsimage/A001.jpg","1/3","1/4","1/5","1/6","1","password","∫[-1,0]x^2/1+2^(x)dx+∫[0,1]x^2/1+2^(x) dxと分けて第一項をx=-tに詳しくは\nhttps://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",true);
 */
+insert into qs_ob values("配信test","https://chart.apis.google.com/chart?cht=tx&chl=\[\int_a^b%20f(x)dx\]","1/3","1/4","1/5","1/6","1","password","∫[-1,0]x^2/1+2^(x)dx+∫[0,1]x^2/1+2^(x) dxと分けて第一項をx=-tに詳しくは\nhttps://noschool.asia/question/%E5%AE%9A%E7%A9%8D%E5%88%86%E3%81%AE%E5%95%8F%E9%A1%8C-2","U3aa127f38f35ddee3962757fe0d50eba",true);
+
 insert into qs_list values("配信test","配信testgp","0,15,30,45 * * * * *",cast('2021-01-05 21:00:00.000000' as datetime),false);
 insert into rank_配信test values("U3aa127f38f35ddee3962757fe0d50eba","拓巳",null,0);
 

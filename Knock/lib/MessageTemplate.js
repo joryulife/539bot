@@ -61,7 +61,7 @@ exports.singleImagemapMessage = function(typeName) {
     if (typeName == "0") {
         return {
             "type": "imagemap",
-            "baseUrl": 'replace your image url', // input your image path
+            "baseUrl": "https://chart.apis.google.com/chart?cht=tx&chl=a-b", // input your image path
             "altText": "text1",
             "baseSize": {
                 "width": 1040,
@@ -220,7 +220,7 @@ exports.customQuestionMessage = function(title, imageUrl, qustions, answers) {
             "url": imageUrl,
             "size": "full",
             "aspectRatio": "20:13",
-            "aspectMode": "cover"
+            "aspectMode": "fit"
           },
           "body": {
             "type": "box",
@@ -306,7 +306,7 @@ exports.customQuestionMessage = function(title, imageUrl, qustions, answers) {
             "url": imageUrl,
             "size": "full",
             "aspectRatio": "20:13",
-            "aspectMode": "cover"
+            "aspectMode": "fit"
           },
           "body": {
             "type": "box",
@@ -418,7 +418,7 @@ exports.customQuestionMessage = function(title, imageUrl, qustions, answers) {
             "url": imageUrl,
             "size": "full",
             "aspectRatio": "20:13",
-            "aspectMode": "cover"
+            "aspectMode": "fit"
           },
           "body": {
             "type": "box",
